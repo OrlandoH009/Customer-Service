@@ -38,6 +38,14 @@ function updateBadge(){
   else w.style.display='none';
 }
 
+function togglePaymentFields(){
+  const method=document.getElementById('payment-method').value;
+  const cashField=document.getElementById('cash-amount-field');
+  const cardField=document.getElementById('card-number-field');
+  if(method==='cash'){cashField.style.display='flex';cardField.style.display='none';}
+  else{cashField.style.display='none';cardField.style.display='flex';}
+}
+
 function saveSetup(){
   empName=document.getElementById('s-emp').value.trim();
   compName=document.getElementById('s-comp').value.trim();
@@ -130,17 +138,31 @@ function generateOrder(){
     showAlert('Empty Product List', 'You must add at least one item to the products summary table to generate a new transaction.');
     return;
   }
+
+  const paymentMethod=document.getElementById('payment-method').value;
+  let payment={method:paymentMethod};
+  if(paymentMethod==='cash'){
+    const cashAmount=parseFloat(document.getElementById('cash-amount').value)||0;
+    if(cashAmount<=0){showAlert('Missing Cash Amount', 'Please enter a valid cash amount greater than 0.');return;}
+    payment.cashAmount=cashAmount;
+  } else {
+    const cardNumber=document.getElementById('card-number').value.trim();
+    if(!cardNumber){showAlert('Missing Card Number', 'Please enter the credit card number to continue.');return;}
+    payment.cardNumber=cardNumber;
+  }
   
   const net=products.reduce((s,p)=>s+p.qty*p.price,0);
   const now=new Date();
   const oid='ORD-'+String(orders.length+1).padStart(3,'0');
   orders.push({
     id:oid,customer:{name,email,phone,addr},employee:empName,company:compName,
-    products:[...products],net,tax:net*.13,gross:net*1.13,status:'pending',
+    products:[...products],net,tax:net*.13,gross:net*1.13,status:'pending',payment,
     date:now.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})
   });
   products=[];pid=0;
-  ['c-name','c-email','c-phone','c-addr'].forEach(x=>document.getElementById(x).value='');
+  ['c-name','c-email','c-phone','c-addr','cash-amount','card-number'].forEach(x=>document.getElementById(x).value='');
+  document.getElementById('payment-method').value='cash';
+  togglePaymentFields();
   renderTable();
   showToast('✓ '+oid+' created!');
   setTimeout(()=>goTo('dash'),800);
@@ -184,6 +206,7 @@ function renderDash(){
         <span><i class="ti ti-mail" aria-hidden="true"></i>${esc(o.customer.email)}</span>
         <span><i class="ti ti-phone" aria-hidden="true"></i>${esc(o.customer.phone)}</span>
         <span><i class="ti ti-map-pin" aria-hidden="true"></i>${esc(o.customer.addr)}</span>
+        <span><i class="ti ti-credit-card" aria-hidden="true"></i>${o.payment.method==='cash' ? 'Cash · $'+o.payment.cashAmount.toFixed(2) : 'Card · •••• '+String(o.payment.cardNumber).slice(-4)}</span>
       </div>
       <div class="o-chips">${o.products.map(p=>`<span class="o-chip">${esc(p.name)} ×${p.qty}</span>`).join('')}</div>
       <div class="o-footer">
@@ -225,6 +248,7 @@ function exportPDF(oid){
     <div><div class="lbl">Phone</div><div class="val">${esc(o.customer.phone)}</div></div>
     <div><div class="lbl">Email</div><div class="val">${esc(o.customer.email)}</div></div>
     <div><div class="lbl">Address</div><div class="val">${esc(o.customer.addr)}</div></div>
+    <div><div class="lbl">Payment</div><div class="val">${o.payment.method==='cash' ? 'Cash · $'+o.payment.cashAmount.toFixed(2) : 'Card · •••• '+String(o.payment.cardNumber).slice(-4)}</div></div>
   </div>
   <table><thead><tr><th>Product</th><th style="text-align:center">Qty</th><th style="text-align:right">Unit price</th><th style="text-align:right">Subtotal</th></tr></thead><tbody>${rows}</tbody></table>
   <table class="tt" style="width:240px;margin-left:auto;">
@@ -245,3 +269,5 @@ function showToast(msg){
   setTimeout(()=>t.classList.remove('show'),3000);
 }
 function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+
+togglePaymentFields();

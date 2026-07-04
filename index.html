@@ -48,7 +48,22 @@
         <div class="field" style="margin-bottom:10px;"><label>Full name</label><input type="text" id="c-name" placeholder="Customer full name"></div>
         <div class="field" style="margin-bottom:10px;"><label>Email address</label><input type="email" id="c-email" placeholder="email@example.com"></div>
         <div class="field" style="margin-bottom:10px;"><label>Phone number</label><input type="tel" id="c-phone" placeholder="+1 (000) 000-0000"></div>
-        <div class="field"><label>Shipping address</label><input type="text" id="c-addr" placeholder="Street, city, state"></div>
+        <div class="field" style="margin-bottom:10px;">
+          <label>Payment method</label>
+          <select id="payment-method" class="select-input" onchange="togglePaymentFields()">
+            <option value="cash">Pay with cash</option>
+            <option value="card">Pay with card</option>
+          </select>
+        </div>
+        <div id="cash-amount-field" class="field payment-field">
+          <label>Cash amount</label>
+          <input type="number" id="cash-amount" min="0" step="0.01" placeholder="0.00">
+        </div>
+        <div id="card-number-field" class="field payment-field" style="display:none;">
+          <label>Credit card number</label>
+          <input type="text" id="card-number" placeholder="1234 5678 9012 3456">
+        </div>
+        <div class="field" style="margin-top:10px;"><label>Shipping address</label><input type="text" id="c-addr" placeholder="Street, city, state"></div>
       </div>
     </div>
     <div>
