@@ -170,8 +170,11 @@ function generateOrder(){
   togglePaymentFields();
   renderTable();
   showToast('✓ '+oid+' created!');
+  // ¡DISPARAR LLUVIA DE DINERO JUSTO AQUÍ!
+  triggerMoneyRain();
   setTimeout(()=>goTo('dash'),800);
 }
+
 
 // FINALIZAR UNA ORDEN
 function finishOrder(oid){
@@ -200,7 +203,31 @@ function renderDash(){
   document.getElementById('m-rev').textContent='$'+rev.toFixed(2);
   document.getElementById('m-total').textContent='$'+tot.toFixed(2);
   const g=document.getElementById('orders-grid');
-  if(!orders.length){g.innerHTML='<div class="no-orders"><i class="ti ti-inbox" aria-hidden="true"></i>No orders yet — go create one!</div>';return;}
+  
+// SI NO HAY ÓRDENES: Inyectamos el viejo oeste dinámico con el nuevo arte realista
+  if(!orders.length){
+    g.innerHTML=`
+      <div class="no-orders">
+        <div class="wild-west-container" id="west-stage">
+          <!-- Decoración: Cactus del desierto -->
+          <div class="desert-cactus cactus-1">🌵</div>
+          <div class="desert-cactus cactus-2">🌵</div>
+          <div class="desert-cactus cactus-3">🌵</div>
+          
+          <!-- Arbustos compactos con texturas de ramas vectoriales -->
+          <div class="tumbleweed" id="weed1"></div>
+          <div class="tumbleweed" id="weed2"></div>
+          <div class="desert-sand"></div>
+        </div>
+        <div class="west-text">"I don't see the green ones over here"</div>
+      </div>
+    `;
+    // Encendemos las físicas adaptadas a la nueva escala compacta
+    initTumbleweeds();
+    return;
+  }
+  
+  // Si hay órdenes, renderiza normal...
   g.innerHTML=orders.slice().reverse().map(o=>`
     <div class="ocard">
       <div class="ocard-top">
@@ -229,7 +256,6 @@ function renderDash(){
 function exportPDF(oid){
   const o=orders.find(x=>x.id===oid); if(!o) return;
   
-  // Mapeo y renderizado elegante de las filas de productos
   const rows=o.products.map(p=>`
     <tr>
       <td style="font-weight: 500; color: #1e293b;">${esc(p.name)}</td>
@@ -239,7 +265,6 @@ function exportPDF(oid){
     </tr>
   `).join('');
 
-  // HTML / CSS Premium estructurado para impresión limpia
   const html=`<!DOCTYPE html>
   <html>
   <head>
@@ -248,40 +273,49 @@ function exportPDF(oid){
     <style>
       @page {
         size: A4;
-        margin: 20mm 16mm;
+        margin: 0; /* Dejamos el margen en 0 para controlarlo perfectamente por CSS */
       }
       *, *::before, *::after { box-sizing: border-box; }
+      
+      /* Contenedor principal para alejar todo de las orillas de la hoja */
+      .page-wrapper {
+        padding: 28mm 24mm; /* Más separación arriba/abajo y generosa a los lados */
+        width: 100%;
+        min-height: 100vh;
+        background: #ffffff;
+      }
+      
       body {
         font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
         margin: 0; padding: 0; color: #1e293b; font-size: 13px; line-height: 1.5;
       }
       
       /* Encabezado */
-      .header-table { width: 100%; border-collapse: collapse; margin-bottom: 30px; }
+      .header-table { width: 100%; border-collapse: collapse; margin-bottom: 35px; }
       .brand-title { font-size: 28px; font-weight: 800; color: #1a6fd4; letter-spacing: -0.5px; margin: 0; }
       .brand-subtitle { font-size: 12px; color: #64748b; margin-top: 4px; }
-      .invoice-title { font-size: 22px; font-weight: 700; color: #0f172a; text-align: right; margin: 0; letter-spacing: 0.5px; }
+      .invoice-title { font-size: 20px; font-weight: 700; color: #0f172a; text-align: right; margin: 0; letter-spacing: 0.5px; }
       .invoice-id { font-size: 14px; font-weight: 700; color: #e05580; text-align: right; margin-top: 4px; }
       
       /* Bloques de Información */
-      .info-table { width: 100%; border-collapse: collapse; margin-bottom: 35px; }
+      .info-table { width: 100%; border-collapse: collapse; margin-bottom: 40px; }
       .info-cell { width: 50%; vertical-align: top; }
-      .info-box { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 16px 18px; margin-right: 10px; }
-      .info-box.right { margin-right: 0; margin-left: 10px; }
-      .sec-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; color: #1a6fd4; margin: 0 0 10px 0; border-bottom: 1px solid #e2e8f0; padding-bottom: 6px; }
+      .info-box { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 18px 20px; margin-right: 12px; }
+      .info-box.right { margin-right: 0; margin-left: 12px; }
+      .sec-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; color: #1a6fd4; margin: 0 0 12px 0; border-bottom: 1px solid #e2e8f0; padding-bottom: 6px; }
       .info-row { margin-bottom: 6px; font-size: 13px; }
       .info-lbl { color: #64748b; font-weight: 500; display: inline-block; width: 85px; }
       .info-val { color: #1e293b; font-weight: 600; }
       
       /* Tabla de Productos */
-      .items-table { width: 100%; border-collapse: collapse; margin-bottom: 25px; }
+      .items-table { width: 100%; border-collapse: collapse; margin-bottom: 30px; }
       .items-table th { background: #0f172a; color: #ffffff; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; padding: 12px 14px; text-align: left; }
       .items-table th:first-child { border-top-left-radius: 6px; border-bottom-left-radius: 6px; }
       .items-table th:last-child { border-top-right-radius: 6px; border-bottom-right-radius: 6px; text-align: right; }
       .items-table td { padding: 12px 14px; border-bottom: 1px solid #e2e8f0; vertical-align: middle; }
       
       /* Totales */
-      .summary-table { width: 260px; margin-left: auto; border-collapse: collapse; margin-top: 15px; }
+      .summary-table { width: 260px; margin-left: auto; border-collapse: collapse; margin-top: 20px; }
       .summary-table td { padding: 6px 10px; font-size: 13px; color: #475569; }
       .summary-table .lbl { text-align: right; font-weight: 500; }
       .summary-table .val { text-align: right; font-weight: 600; width: 110px; color: #1e293b; }
@@ -292,90 +326,91 @@ function exportPDF(oid){
     </style>
   </head>
   <body>
+    <!-- Envoltura con márgenes reforzados -->
+    <div class="page-wrapper">
 
-    <!-- Encabezado Principal -->
-    <table class="header-table">
-      <tr>
-        <td>
-          <div class="brand-title">OrderFlow</div>
-          <div class="brand-subtitle">Empresa: <strong>${esc(o.company)}</strong> &middot; Agente: <strong>${esc(o.employee)}</strong></div>
-        </td>
-        <td style="vertical-align: top;">
-          <div class="invoice-title">COMPROBANTE DE COMPRA</div>
-          <div class="invoice-id">${o.id}</div>
-        </td>
-      </tr>
-    </table>
-
-    <!-- Grid de Datos Básicos y del Cliente -->
-    <table class="info-table">
-      <tr>
-        <td class="info-cell">
-          <div class="info-box">
-            <h2 class="sec-title">Detalles del Pedido</h2>
-            <div class="info-row"><span class="info-lbl">Fecha:</span><span class="info-val">${o.date}</span></div>
-            <div class="info-row"><span class="info-lbl">Estado:</span><span class="info-val" style="color:#166534; text-transform:capitalize;">${o.status}</span></div>
-            <div class="info-row"><span class="info-lbl">Método Pago:</span><span class="info-val">${o.payment.method==='cash' ? 'Efectivo' : 'Tarjeta'}</span></div>
-            <div class="info-row"><span class="info-lbl">Referencia:</span><span class="info-val">${o.payment.method==='cash' ? '$'+o.payment.cashAmount.toFixed(2) : '•••• '+String(o.payment.cardNumber).slice(-4)}</span></div>
-          </div>
-        </td>
-        <td class="info-cell">
-          <div class="info-box right">
-            <h2 class="sec-title">Información del Cliente</h2>
-            <div class="info-row"><span class="info-lbl">Nombre:</span><span class="info-val">${esc(o.customer.name)}</span></div>
-            <div class="info-row"><span class="info-lbl">Teléfono:</span><span class="info-val">${esc(o.customer.phone)}</span></div>
-            <div class="info-row"><span class="info-lbl">Email:</span><span class="info-val" style="font-weight:500;">${esc(o.customer.email)}</span></div>
-            <div class="info-row"><span class="info-lbl">Dirección:</span><span class="info-val">${esc(o.customer.addr)}</span></div>
-          </div>
-        </td>
-      </tr>
-    </table>
-
-    <!-- Tabla de Artículos -->
-    <table class="items-table">
-      <thead>
+      <!-- Encabezado Principal -->
+      <table class="header-table">
         <tr>
-          <th style="width: 50%;">Descripción del Producto</th>
-          <th style="width: 15%; text-align: center;">Cant.</th>
-          <th style="width: 15%; text-align: right;">Precio Unit.</th>
-          <th style="width: 20%; text-align: right;">Subtotal</th>
+          <td>
+            <div class="brand-title">OrderFlow</div>
+            <div class="brand-subtitle">Empresa: <strong>${esc(o.company)}</strong> &middot; Agente: <strong>${esc(o.employee)}</strong></div>
+          </td>
+          <td style="vertical-align: top;">
+            <div class="invoice-title">COMPROBANTE DE COMPRA</div>
+            <div class="invoice-id">${o.id}</div>
+          </td>
         </tr>
-      </thead>
-      <tbody>
-        ${rows}
-      </tbody>
-    </table>
+      </table>
 
-    <!-- desglose de Totales Financieros -->
-    <table class="summary-table">
-      <tr>
-        <td class="lbl">Subtotal neto</td>
-        <td class="val">$${o.net.toFixed(2)}</td>
-      </tr>
-      <tr>
-        <td class="lbl">IVA / Impuestos (13%)</td>
-        <td class="val">$${o.tax.toFixed(2)}</td>
-      </tr>
-      <tr class="total-row">
-        <td class="lbl">Total a Pagar</td>
-        <td class="val">$${o.gross.toFixed(2)}</td>
-      </tr>
-    </table>
+      <!-- Grid de Datos Básicos y del Cliente -->
+      <table class="info-table">
+        <tr>
+          <td class="info-cell">
+            <div class="info-box">
+              <h2 class="sec-title">Detalles del Pedido</h2>
+              <div class="info-row"><span class="info-lbl">Fecha:</span><span class="info-val">${o.date}</span></div>
+              <div class="info-row"><span class="info-lbl">Estado:</span><span class="info-val" style="color:#166534; text-transform:capitalize;">${o.status}</span></div>
+              <div class="info-row"><span class="info-lbl">Método Pago:</span><span class="info-val">${o.payment.method==='cash' ? 'Efectivo' : 'Tarjeta'}</span></div>
+              <div class="info-row"><span class="info-lbl">Referencia:</span><span class="info-val">${o.payment.method==='cash' ? '$'+o.payment.cashAmount.toFixed(2) : '•••• '+String(o.payment.cardNumber).slice(-4)}</span></div>
+            </div>
+          </td>
+          <td class="info-cell">
+            <div class="info-box right">
+              <h2 class="sec-title">Información del Cliente</h2>
+              <div class="info-row"><span class="info-lbl">Nombre:</span><span class="info-val">${esc(o.customer.name)}</span></div>
+              <div class="info-row"><span class="info-lbl">Teléfono:</span><span class="info-val">${esc(o.customer.phone)}</span></div>
+              <div class="info-row"><span class="info-lbl">Email:</span><span class="info-val" style="font-weight:500;">${esc(o.customer.email)}</span></div>
+              <div class="info-row"><span class="info-lbl">Dirección:</span><span class="info-val">${esc(o.customer.addr)}</span></div>
+            </div>
+          </td>
+        </tr>
+      </table>
 
-    <!-- Pie de Página Fijo -->
-    <div class="footer">
-      Documento electrónico emitido por OrderFlow &middot; ¡Gracias por su confianza y preferencia!
+      <!-- Tabla de Artículos -->
+      <table class="items-table">
+        <thead>
+          <tr>
+            <th style="width: 50%;">Descripción del Producto</th>
+            <th style="width: 15%; text-align: center;">Cant.</th>
+            <th style="width: 15%; text-align: right;">Precio Unit.</th>
+            <th style="width: 20%; text-align: right;">Subtotal</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${rows}
+        </tbody>
+      </table>
+
+      <!-- Desglose de Totales Financieros -->
+      <table class="summary-table">
+        <tr>
+          <td class="lbl">Subtotal neto</td>
+          <td class="val">$${o.net.toFixed(2)}</td>
+        </tr>
+        <tr>
+          <td class="lbl">IVA / Impuestos (13%)</td>
+          <td class="val">$${o.tax.toFixed(2)}</td>
+        </tr>
+        <tr class="total-row">
+          <td class="lbl">Total a Pagar</td>
+          <td class="val">$${o.gross.toFixed(2)}</td>
+        </tr>
+      </table>
+
+      <!-- Pie de Página Fijo -->
+      <div class="footer">
+        Documento electrónico emitido por OrderFlow &middot; ¡Gracias por su confianza y preferencia!
+      </div>
+
     </div>
-
   </body>
   </html>`;
 
-  // Apertura y disparo nativo de la orden de impresión del navegador
   const w=window.open('','_blank','width=850,height=700');
   if(w){
     w.document.write(html);
     w.document.close();
-    // Añadimos una pequeña espera para garantizar que cargue los estilos en la ventana flotante
     setTimeout(()=>w.print(), 350);
   } else {
     showAlert('Browser Blocked Popup', 'Please allow popups for this page to export and print the order PDF invoice document.');
@@ -611,4 +646,113 @@ function showToast(msg){
     scale: 0.95,
     onComplete: () => t.classList.remove('show')
   });
+}
+
+// --- LÓGICA DE FÍSICAS REBOTANTES ADAPTADAS A TAMAÑO REDUCIDO Y LENTO ---
+function initTumbleweeds() {
+  const stage = document.getElementById('west-stage');
+  const w1 = document.getElementById('weed1');
+  const w2 = document.getElementById('weed2');
+  if(!stage || !w1 || !w2) return;
+
+  const stageW = stage.clientWidth;
+  
+  // Tamaño cambiado a 35 para hacer match perfecto con el CSS reducido
+  let pos1 = { x: stageW * 0.15, y: 0, vx: 1.1, size: 35 };
+  let pos2 = { x: stageW * 0.75, y: 0, vx: -0.9, size: 35 };
+
+  gsap.ticker.remove(updateLoop);
+
+  function updateLoop() {
+    if (!document.getElementById('west-stage')) {
+      gsap.ticker.remove(updateLoop);
+      return;
+    }
+
+    const currentWidth = stage.clientWidth;
+
+    pos1.x += pos1.vx;
+    pos2.x += pos2.vx;
+
+    // Saltos orgánicos pausados y proporcionales a su tamaño
+    pos1.y = Math.abs(Math.sin(pos1.x * 0.025)) * 16;
+    pos2.y = Math.abs(Math.sin(pos2.x * 0.022)) * 14;
+
+    if (pos1.x <= 0) { pos1.x = 0; pos1.vx *= -1; }
+    if (pos1.x >= currentWidth - pos1.size) { pos1.x = currentWidth - pos1.size; pos1.vx *= -1; }
+
+    if (pos2.x <= 0) { pos2.x = 0; pos2.vx *= -1; }
+    if (pos2.x >= currentWidth - pos2.size) { pos2.x = currentWidth - pos2.size; pos2.vx *= -1; }
+
+    let dist = Math.abs(pos1.x - pos2.x);
+    if (dist < pos1.size) {
+      let temp = pos1.vx;
+      pos1.vx = pos2.vx;
+      pos2.vx = temp;
+
+      if(pos1.x < pos2.x) {
+        pos1.x -= 1; pos2.x += 1;
+      } else {
+        pos1.x += 1; pos2.x -= 1;
+      }
+    }
+
+    gsap.set(w1, { x: pos1.x, y: -pos1.y, rotation: pos1.x * 1.5 });
+    gsap.set(w2, { x: pos2.x, y: -pos2.y, rotation: pos2.x * -1.5 });
+  }
+
+  gsap.ticker.add(updateLoop);
+}
+
+// --- LÓGICA DE LA LLUVIA DE EMOJIS DE DINERO ---
+function triggerMoneyRain() {
+  // Crear contenedor temporal en el body
+  const rainContainer = document.createElement('div');
+  rainContainer.className = 'money-rain-container';
+  document.body.appendChild(rainContainer);
+
+  const emojis = ['💰', '💵', '💸', '🤑', '🪙'];
+  const count = 45; // Cantidad de billetes/bolsas cayendo
+
+  for (let i = 0; i < count; i++) {
+    const el = document.createElement('div');
+    el.className = 'money-emoji';
+    el.textContent = emojis[Math.floor(Math.random() * emojis.length)];
+    
+    // Distribución horizontal aleatoria uniforme
+    const randomX = Math.random() * 100; 
+    el.style.left = randomX + 'vw';
+    el.style.top = '-50px';
+    
+    rainContainer.appendChild(el);
+
+    // Velocidades y rotaciones orgánicas aleatorias por cada emoji
+    const duration = gsap.utils.random(2.0, 3.8);
+    const delay = gsap.utils.random(0, 0.6);
+    const rotation = gsap.utils.random(-360, 360);
+    const driftX = gsap.utils.random(-80, 80); // Desvío de lado a lado en la caída
+
+    // Animación física de caída con desvanecimiento simultáneo (Fade out)
+    gsap.to(el, {
+      y: window.innerHeight + 100,
+      x: driftX,
+      rotation: rotation,
+      duration: duration,
+      delay: delay,
+      ease: "power1.in",
+    });
+
+    // Van desapareciendo gradualmente a medida que bajan
+    gsap.to(el, {
+      opacity: 0,
+      duration: duration * 0.4,
+      delay: delay + (duration * 0.6), // Inicia el fade out pasando la mitad del camino
+      ease: "power1.out"
+    });
+  }
+
+  // Auto-destrucción del contenedor del DOM al terminar la lluvia completa
+  setTimeout(() => {
+    rainContainer.remove();
+  }, 4500);
 }
