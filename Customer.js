@@ -271,3 +271,120 @@ function showToast(msg){
 function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
 
 togglePaymentFields();
+
+//GSAP Animations
+//Hero animation-------
+window.addEventListener('DOMContentLoaded', () => {
+  gsap.from(".setup-hero", { 
+    duration: 1, 
+    y: 30, 
+    opacity: 0, 
+    ease: "power3.out" 
+  });
+  
+  gsap.from(".pg-setup .card", { 
+    duration: 1, 
+    y: 50, 
+    opacity: 0, 
+    delay: 0.2, 
+    ease: "power3.out" 
+  });
+});
+
+//Navigation animation-------
+function goTo(p){
+  if((p==='order'||p==='dash')&&!setupComplete){
+    showAlert('Navigation Restricted', 'Please complete the profile Setup first before exploring other sections.');
+    return;
+  }
+  
+  ['setup','order','dash'].forEach(x=>{
+    document.getElementById('pg-'+x).classList.remove('active');
+    document.getElementById('nl-'+x).classList.remove('active');
+  });
+  
+  const nextPage = document.getElementById('pg-'+p);
+  nextPage.classList.add('active');
+  document.getElementById('nl-'+p).classList.add('active');
+  
+  gsap.fromTo(nextPage, 
+    { opacity: 0, x: 20 }, 
+    { duration: 0.4, opacity: 1, x: 0, ease: "power2.out" }
+  );
+
+  if(p==='dash') renderDash();
+}
+
+//Animation for toast notifications
+function showToast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  
+  // Reseteamos el estado con GSAP y lo hacemos visible
+  gsap.killTweensOf(t); // Por si se da click rápido seguidamente
+  t.classList.add('show');
+  
+  // Animación de entrada (Slide down + Fade in)
+  gsap.fromTo(t, 
+    { y: -50, opacity: 0 },
+    { duration: 0.5, y: 0, opacity: 1, ease: "back.out(1.7)" }
+  );
+  
+  // Animación de salida después de 3 segundos
+  gsap.to(t, {
+    delay: 2.7,
+    duration: 0.3,
+    opacity: 0,
+    y: -20,
+    onComplete: () => t.classList.remove('show')
+  });
+}
+
+//Animation for alert modal
+function showAlert(title, message) {
+  document.getElementById('alert-title').textContent = title;
+  document.getElementById('alert-msg').textContent = message;
+  
+  const overlay = document.getElementById('custom-alert');
+  const modal = overlay.querySelector('.alert-modal');
+  
+  overlay.classList.add('show');
+  
+  // Animamos el fondo negro (fade in)
+  gsap.fromTo(overlay, { opacity: 0 }, { duration: 0.2, opacity: 1 });
+  // Animamos el modal interior (de chiquito a grande con rebote)
+  gsap.fromTo(modal, 
+    { scale: 0.7, opacity: 0 }, 
+    { duration: 0.4, scale: 1, opacity: 1, ease: "back.out(1.5)" }
+  );
+}
+
+function closeAlert() {
+  const overlay = document.getElementById('custom-alert');
+  const modal = overlay.querySelector('.alert-modal');
+  
+  // Animación de salida fluida antes de ocultar el elemento
+  gsap.to(modal, { duration: 0.2, scale: 0.8, opacity: 0 });
+  gsap.to(overlay, { 
+    duration: 0.2, 
+    opacity: 0, 
+    onComplete: () => overlay.classList.remove('show') 
+  });
+}
+
+//Payment animation
+function togglePaymentFields(){
+  const method = document.getElementById('payment-method').value;
+  const cashField = document.getElementById('cash-amount-field');
+  const cardField = document.getElementById('card-number-field');
+  
+  if(method === 'cash'){
+    cardField.style.display = 'none';
+    cashField.style.display = 'flex';
+    gsap.fromTo(cashField, { opacity: 0, y: -10 }, { duration: 0.3, opacity: 1, y: 0 });
+  } else {
+    cashField.style.display = 'none';
+    cardField.style.display = 'flex';
+    gsap.fromTo(cardField, { opacity: 0, y: -10 }, { duration: 0.3, opacity: 1, y: 0 });
+  }
+}
