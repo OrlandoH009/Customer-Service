@@ -7,99 +7,118 @@
   <link rel="stylesheet" href="Customer.css" />
 </head>
 <body>
-  <div class="wrap" id="app">
+<div class="wrap" id="app">
     <nav class="navbar">
-      <div class="nav-brand"><i class="ti ti-clipboard-list" aria-hidden="true"></i> OrderFlow</div>
+      <div class="nav-brand">
+        <i class="ti ti-clipboard-list" aria-hidden="true"></i> OrderFlow
+      </div>
+    
       <div class="nav-links">
-    <button class="nav-link active" onclick="goTo('setup')" id="nl-setup"><i class="ti ti-user-circle" aria-hidden="true"></i> Setup</button>
-    <button class="nav-link" onclick="goTo('order')" id="nl-order" disabled><i class="ti ti-circle-plus" aria-hidden="true"></i> New order</button>
-    <button class="nav-link" onclick="goTo('dash')" id="nl-dash" disabled><i class="ti ti-layout-dashboard" aria-hidden="true"></i> Dashboard</button>
-  </div>
-  <div class="nav-right">
-    <button class="theme-btn" onclick="toggleTheme()" aria-label="Toggle theme"><i class="ti ti-sun" id="th-icon" aria-hidden="true"></i></button>
-  </div>
-</nav>
-
-<div class="page active" id="pg-setup">
-  <div class="pg-setup">
-    <div class="setup-hero">
-      <div class="setup-icon"><i class="ti ti-building-store" aria-hidden="true"></i></div>
-      <h1>Welcome to OrderFlow</h1>
-      <p>Set up your employee profile to start creating orders</p>
-    </div>
-    <div class="card">
-      <div class="sec-label"><i class="ti ti-id-badge-2" aria-hidden="true"></i> Your profile</div>
-      <div class="row2">
-        <div class="field"><label>Employee name</label><input type="text" id="s-emp" placeholder="Your full name" oninput="updateBadge()"></div>
-        <div class="field"><label>Company name</label><input type="text" id="s-comp" placeholder="Company name" oninput="updateBadge()"></div>
+        <button class="nav-link active" onclick="goTo('setup')" id="nl-setup"><span id="emoji-setup">👤</span> Setup</button>
+        <button class="nav-link" onclick="goTo('order')" id="nl-order" disabled><span id="emoji-order">📝</span> New order</button>
+        <button class="nav-link" onclick="goTo('dash')" id="nl-dash" disabled><span id="emoji-dash">📊</span> Dashboard</button>
       </div>
-      <div id="setup-badge" style="display:none;"><div class="chip"><i class="ti ti-check" aria-hidden="true"></i><span id="badge-txt"></span></div></div>
-      <button class="primary-btn" onclick="saveSetup()"><i class="ti ti-arrow-right" aria-hidden="true"></i> Save &amp; continue</button>
-    </div>
-  </div>
-</div>
 
-<div class="page" id="pg-order">
-  <div id="emp-bar" style="display:none;" class="emp-bar"><i class="ti ti-user-check" aria-hidden="true"></i><span id="emp-bar-txt"></span></div>
-  <div class="order-layout">
-    <div>
+      <div class="nav-right">
+        <button class="theme-btn" onclick="toggleTheme()" aria-label="Toggle theme" style="font-size: 1.2rem;">
+          <span id="th-emoji">🌙</span>
+        </button>
+      </div>
+    </nav> 
+
+
+
+  <!-- REEMPLAZAR LA SECCIÓN DE #pg-setup PARA INCLUIR LOS EMOJIS DE FONDO -->
+  <div class="page active" id="pg-setup">
+    <!-- Contenedor de Emojis en el Fondo con efecto de profundidad -->
+    <div class="contenedor-emojis-fondo">
+      <div class="emoji-flotante e-lejos-1">📦</div>
+      <div class="emoji-flotante e-lejos-2">💼</div>
+      <div class="emoji-flotante e-lejos-3">🏢</div>
+      <div class="emoji-flotante e-cerca-1">🛒</div>
+      <div class="emoji-flotante e-cerca-2">📈</div>
+      <div class="emoji-flotante e-cerca-3">💰</div>
+    </div>
+
+    <div class="pg-setup">
+      <div class="setup-hero">
+        <div class="setup-icon"><i class="ti ti-building-store" aria-hidden="true"></i></div>
+        <h1>Welcome to OrderFlow</h1>
+        <p>Set up your employee profile to start creating orders</p>
+      </div>
       <div class="card">
-        <div class="sec-label"><i class="ti ti-user" aria-hidden="true"></i> Customer information</div>
-        <div class="field" style="margin-bottom:10px;"><label>Full name</label><input type="text" id="c-name" placeholder="Customer full name"></div>
-        <div class="field" style="margin-bottom:10px;"><label>Email address</label><input type="email" id="c-email" placeholder="email@example.com"></div>
-        <div class="field" style="margin-bottom:10px;"><label>Phone number</label><input type="tel" id="c-phone" placeholder="+1 (000) 000-0000"></div>
-        <div class="field" style="margin-bottom:10px;">
-          <label>Payment method</label>
-          <select id="payment-method" class="select-input" onchange="togglePaymentFields()">
-            <option value="cash">Pay with cash</option>
-            <option value="card">Pay with card</option>
-          </select>
+        <div class="sec-label"><i class="ti ti-id-badge-2" aria-hidden="true"></i> Your profile</div>
+        <div class="row2">
+          <div class="field"><label>Employee name</label><input type="text" id="s-emp" placeholder="Your full name" oninput="updateBadge()"></div>
+          <div class="field"><label>Company name</label><input type="text" id="s-comp" placeholder="Company name" oninput="updateBadge()"></div>
         </div>
-        <div id="cash-amount-field" class="field payment-field">
-          <label>Cash amount</label>
-          <input type="number" id="cash-amount" min="0" step="0.01" placeholder="0.00">
-        </div>
-        <div id="card-number-field" class="field payment-field" style="display:none;">
-          <label>Credit card number</label>
-          <input type="text" id="card-number" placeholder="1234 5678 9012 3456">
-        </div>
-        <div class="field" style="margin-top:10px;"><label>Shipping address</label><input type="text" id="c-addr" placeholder="Street, city, state"></div>
-      </div>
-    </div>
-    <div>
-      <div class="card">
-        <div class="sec-label"><i class="ti ti-package" aria-hidden="true"></i> Products</div>
-        <div class="add-row">
-          <div class="field"><label>Product name</label><input type="text" id="np" placeholder="e.g. Blue shirt M"></div>
-          <div class="field"><label>Qty</label><input type="number" id="nq" min="1" value="1" class="qty-f"></div>
-          <div class="field"><label>Price ($)</label><input type="number" id="npr" min="0" step="0.01" placeholder="0.00" class="price-f"></div>
-          <button class="add-btn" onclick="addProduct()"><i class="ti ti-plus" aria-hidden="true"></i> Add</button>
-        </div>
-        <table class="ptable">
-          <thead><tr><th class="cn">Product</th><th class="cq">Qty</th><th class="cp">Price</th><th class="cs">Subtotal</th><th class="cd">Delete</th></tr></thead>
-          <tbody id="ptbody"><tr class="empty-r"><td colspan="5">No products added yet</td></tr></tbody>
-        </table>
-        <div class="totals-box">
-          <div class="tline"><span>Subtotal</span><span id="t-net">$0.00</span></div>
-          <div class="tline"><span>Tax <span class="tax-pill">13%</span></span><span id="t-tax">$0.00</span></div>
-          <div class="tline fin"><span>Total</span><span class="amt" id="t-gross">$0.00</span></div>
-        </div>
-        <button class="primary-btn" onclick="generateOrder()"><i class="ti ti-send" aria-hidden="true"></i> Generate order</button>
+        <div id="setup-badge" style="display:none;"><div class="chip"><i class="ti ti-check" aria-hidden="true"></i><span id="badge-txt"></span></div></div>
+        <button class="primary-btn" onclick="saveSetup()"><i class="ti ti-arrow-right" aria-hidden="true"></i> 💾 Save &amp; continue</button>
       </div>
     </div>
   </div>
-</div>
 
-<div class="page" id="pg-dash">
-  <div class="metrics">
-    <div class="mcard"><div class="ml"><i class="ti ti-list-check" aria-hidden="true"></i> Total orders</div><div class="mv" id="m-count">0</div></div>
-    <div class="mcard"><div class="ml"><i class="ti ti-chart-bar" aria-hidden="true"></i> Revenue (before tax)</div><div class="mv" id="m-rev">$0.00</div></div>
-    <div class="mcard"><div class="ml"><i class="ti ti-cash" aria-hidden="true"></i> Collected (w/ tax)</div><div class="mv" id="m-total">$0.00</div></div>
+  <div class="page" id="pg-order">
+    <div id="emp-bar" style="display:none;" class="emp-bar"><i class="ti ti-user-check" aria-hidden="true"></i><span id="emp-bar-txt"></span></div>
+    <div class="order-layout">
+      <div>
+        <div class="card">
+          <div class="sec-label"><i class="ti ti-user" aria-hidden="true"></i> Customer information</div>
+          <div class="field" style="margin-bottom:10px;"><label>Full name</label><input type="text" id="c-name" placeholder="Customer full name"></div>
+          <div class="field" style="margin-bottom:10px;"><label>Email address</label><input type="email" id="c-email" placeholder="email@example.com"></div>
+          <div class="field" style="margin-bottom:10px;"><label>Phone number</label><input type="tel" id="c-phone" placeholder="+1 (000) 000-0000"></div>
+          <div class="field" style="margin-bottom:10px;">
+            <label>Payment method</label>
+            <select id="payment-method" class="select-input" onchange="togglePaymentFields()">
+              <option value="cash">Pay with cash</option>
+              <option value="card">Pay with card</option>
+            </select>
+          </div>
+          <div id="cash-amount-field" class="field payment-field">
+            <label>Cash amount</label>
+            <input type="number" id="cash-amount" min="0" step="0.01" placeholder="0.00">
+          </div>
+          <div id="card-number-field" class="field payment-field" style="display:none;">
+            <label>Credit card number</label>
+            <input type="text" id="card-number" placeholder="1234 5678 9012 3456">
+          </div>
+          <div class="field" style="margin-top:10px;"><label>Shipping address</label><input type="text" id="c-addr" placeholder="Street, city, state"></div>
+        </div>
+      </div>
+      <div>
+        <div class="card">
+          <div class="sec-label"><i class="ti ti-package" aria-hidden="true"></i> Products</div>
+          <div class="add-row">
+            <div class="field"><label>Product name</label><input type="text" id="np" placeholder="e.g. Blue shirt M"></div>
+            <div class="field"><label>Qty</label><input type="number" id="nq" min="1" value="1" class="qty-f"></div>
+            <div class="field"><label>Price ($)</label><input type="number" id="npr" min="0" step="0.01" placeholder="0.00" class="price-f"></div>
+            <button class="add-btn" onclick="addProduct()"><i class="ti ti-plus" aria-hidden="true"></i> Add</button>
+          </div>
+          <table class="ptable">
+            <thead><tr><th class="cn">Product</th><th class="cq">Qty</th><th class="cp">Price</th><th class="cs">Subtotal</th><th class="cd">Delete</th></tr></thead>
+            <tbody id="ptbody"><tr class="empty-r"><td colspan="5">No products added yet</td></tr></tbody>
+          </table>
+          <div class="totals-box">
+            <div class="tline"><span>Subtotal</span><span id="t-net">$0.00</span></div>
+            <div class="tline"><span>Tax <span class="tax-pill">13%</span></span><span id="t-tax">$0.00</span></div>
+            <div class="tline fin"><span>Total</span><span class="amt" id="t-gross">$0.00</span></div>
+          </div>
+          <button class="primary-btn" onclick="generateOrder()"><i class="ti ti-send" aria-hidden="true"></i> 🚀 Generate order</button>
+        </div>
+      </div>
+    </div>
   </div>
-  <div class="orders-grid" id="orders-grid">
-    <div class="no-orders"><i class="ti ti-inbox" aria-hidden="true"></i>No orders yet — go create one!</div>
+
+  <div class="page" id="pg-dash">
+    <div class="metrics">
+      <div class="mcard"><div class="ml"><i class="ti ti-list-check" aria-hidden="true"></i> Total orders</div><div class="mv" id="m-count">0</div></div>
+      <div class="mcard"><div class="ml"><i class="ti ti-chart-bar" aria-hidden="true"></i> Revenue (before tax)</div><div class="mv" id="m-rev">$0.00</div></div>
+      <div class="mcard"><div class="ml"><i class="ti ti-cash" aria-hidden="true"></i> Collected (w/ tax)</div><div class="mv" id="m-total">$0.00</div></div>
+    </div>
+    <div class="orders-grid" id="orders-grid">
+      <div class="no-orders"><i class="ti ti-inbox" aria-hidden="true"></i>No orders yet — go create one!</div>
+    </div>
   </div>
-</div>
 </div>
 
 <div class="alert-overlay" id="custom-alert">
@@ -112,7 +131,6 @@
 </div>
 
 <div class="toast" id="toast"></div>
-<!-- Cargar GSAP desde CDN (Colócalo antes de cerrar el </body>) -->
 <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
 
 <!-- Tu script actual -->

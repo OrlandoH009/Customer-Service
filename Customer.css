@@ -18,17 +18,30 @@ html,body{width:100%;height:100%;}
 }
 
 /* MODO CLARO SECUNDARIO */
+/* 1. SUAVIZAR EL MODO CLARO (Menos fuerte a la vista, tonos grisáceos/azulados suaves) */
 .light {
-  --card:#ffffff;--bg:#f0f6ff;--border:rgba(26,111,212,0.15);
-  --text:#1a1a2e;--muted:#64748b;--inp:#ffffff;--inp-b:rgba(100,116,139,0.3);
-  --metric:#e8f1fc;--metric-t:#185FA5;
-  --tbl-h:#f5f9ff;--tbl-b:rgba(26,111,212,0.09);
-  --nav:#ffffff;--nav-b:rgba(26,111,212,0.12);
-  --pink-bg:#fbeaf0;--pink-t:#b5315a;
-  --sky-bg:#e0f4fa;--sky-t:#185FA5;
-  --green-bg:#eaf3de;--green-t:#3B6D11;
-  --chip-bg:#e8f1fc;--chip-t:#185FA5;
-  --overlay:rgba(0,0,0,0.4);
+  --card: #f8fafc; /* Blanco roto más suave */
+  --bg: #e2e8f0;   /* Gris azulado apagado en lugar de azul brillante */
+  --border: rgba(26,111,212,0.12);
+  --text: #1e293b; /* Texto oscuro pero no negro puro */
+  --muted: #64748b;
+  --inp: #ffffff;
+  --inp-b: rgba(100,116,139,0.25);
+  --metric: #cbd5e1;
+  --metric-t: #0f172a;
+  --tbl-h: #f1f5f9;
+  --tbl-b: rgba(26,111,212,0.06);
+  --nav: #f1f5f9;  /* Navbar integrada con tonos grisáceos */
+  --nav-b: rgba(26,111,212,0.1);
+  --pink-bg: #ffe4e6;
+  --pink-t: #9f1239;
+  --sky-bg: #e0f2fe;
+  --sky-t: #0369a1;
+  --green-bg: #dcfce7;
+  --green-t: #166534;
+  --chip-bg: #e2e8f0;
+  --chip-t: #0f172a;
+  --overlay: rgba(0,0,0,0.3);
 }
 
 .wrap{font-family:var(--font-sans);background:var(--bg);border-radius:0;overflow:hidden;transition:background .25s, color .25s;width:100%;height:100vh;display:flex;flex-direction:column;margin:0;}
@@ -195,4 +208,114 @@ html,body{width:100%;height:100%;}
 @media(max-width:800px){
   .order-layout{grid-template-columns:1fr;}
   .orders-grid{grid-template-columns:1fr;}
+}
+/* Corrección en Customer.css para evitar espacios raros abajo */
+.toast {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 10000;
+  background: #1a1a2e;
+  color: #fff;
+  padding: 10px 20px;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 500;
+  opacity: 0;
+  pointer-events: none;
+  text-align: center;
+  font-family: var(--font-sans);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+  display: block; /* Solo se manipula la opacidad/escala con GSAP */
+}
+/* AGREGAR AL FINAL DE CUSTOMER.CSS */
+
+#pg-setup {
+  position: relative;
+  overflow: hidden;
+}
+
+.contenedor-emojis-fondo {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+  pointer-events: none;
+}
+
+.pg-setup > div:first-child {
+  position: relative;
+  z-index: 1; /* Mantiene el formulario por encima de los emojis */
+}
+
+.emoji-flotante {
+  position: absolute;
+  user-select: none;
+}
+
+/* === EMOJIS MÁS LEJOS DEL CENTRO (Más desvanecidos, pequeños y lentos) === */
+.e-lejos-1 {
+  top: 15%; left: 10%; font-size: 1.8rem; opacity: 0.12;
+  animation: girarFlotar 16s linear infinite alternate;
+}
+.e-lejos-2 {
+  top: 75%; left: 12%; font-size: 2rem; opacity: 0.15;
+  animation: girarFlotar 20s linear infinite alternate-reverse;
+}
+.e-lejos-3 {
+  top: 80%; right: 10%; font-size: 1.9rem; opacity: 0.12;
+  animation: girarFlotar 18s linear infinite alternate;
+}
+
+/* === EMOJIS MÁS CERCANOS AL CONTENEDOR (Más visibles, grandes y dinámicos) === */
+.e-cerca-1 {
+  top: 25%; right: 18%; font-size: 3.5rem; opacity: 0.45;
+  animation: girarFlotar 10s linear infinite alternate;
+}
+.e-cerca-2 {
+  top: 50%; left: 22%; font-size: 3rem; opacity: 0.4;
+  animation: girarFlotar 12s linear infinite alternate-reverse;
+}
+.e-cerca-3 {
+  bottom: 25%; right: 20%; font-size: 3.8rem; opacity: 0.5;
+  animation: girarFlotar 9s linear infinite alternate;
+}
+
+@keyframes girarFlotar {
+  0% {
+    transform: translateY(0) rotate(0deg) scale(1);
+  }
+  50% {
+    transform: translateY(-15px) rotate(180deg) scale(1.05);
+  }
+  100% {
+    transform: translateY(0) rotate(360deg) scale(1);
+  }
+}
+
+/* Ajuste visual para botones con texto y emojis */
+.primary-btn, .add-btn, .action-btn {
+  gap: 10px !important;
+}
+
+/* 2. ARREGLAR SCROLL INNECESARIO EN NEW ORDER */
+/* Modifica la clase .page para asegurar que contenga el flujo correctamente */
+.page {
+  display: none;
+  padding: 24px;
+  overflow-y: auto;
+  flex: 1;
+  height: 100%; /* Limita la altura al contenedor padre */
+}
+
+/* Ajusta el layout de las órdenes para que no fuerce un desbordamiento vertical artificial */
+.order-layout {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  align-items: start;
+  height: auto; /* Cambiado de 100% a auto para evitar estiramientos e innecesario scroll */
 }

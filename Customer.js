@@ -11,23 +11,28 @@ function closeAlert() {
 }
 
 function toggleTheme(){
-  isDark=!isDark;
-  document.getElementById('app').className='wrap '+(isDark?'':'light');
-  document.getElementById('th-icon').className=isDark?'ti ti-sun':'ti ti-moon';
-}
+  isDark = !isDark;
+  document.getElementById('app').className = 'wrap ' + (isDark ? '' : 'light');
+  
+  // Nodos de los emojis en la interfaz
+  const thEmoji = document.getElementById('th-emoji');
+  const setupEmoji = document.getElementById('emoji-setup');
+  const orderEmoji = document.getElementById('emoji-order');
+  const dashEmoji = document.getElementById('emoji-dash');
 
-function goTo(p){
-  if((p==='order'||p==='dash')&&!setupComplete){
-    showAlert('Navigation Restricted', 'Please complete the profile Setup first before exploring other sections.');
-    return;
+  if (isDark) {
+    // Emojis para el modo oscuro
+    if (thEmoji) thEmoji.textContent = '🌙';
+    if (setupEmoji) setupEmoji.textContent = '👨‍💼';
+    if (orderEmoji) orderEmoji.textContent = '🛒';
+    if (dashEmoji) dashEmoji.textContent = '📈';
+  } else {
+    // Emojis para el modo claro
+    if (thEmoji) thEmoji.textContent = '☀️';
+    if (setupEmoji) setupEmoji.textContent = '👤';
+    if (orderEmoji) orderEmoji.textContent = '📝';
+    if (dashEmoji) dashEmoji.textContent = '📊';
   }
-  ['setup','order','dash'].forEach(x=>{
-    document.getElementById('pg-'+x).classList.remove('active');
-    document.getElementById('nl-'+x).classList.remove('active');
-  });
-  document.getElementById('pg-'+p).classList.add('active');
-  document.getElementById('nl-'+p).classList.add('active');
-  if(p==='dash')renderDash();
 }
 
 function updateBadge(){
@@ -100,7 +105,7 @@ function renderTable(){
     <td class="cq"><input class="iinput" type="number" min="1" value="${p.qty}" style="width:46px;" onchange="updateField(${p.id},'q',this.value)"></td>
     <td class="cp"><input class="iinput" type="number" min="0" step="0.01" value="${p.price.toFixed(2)}" style="width:62px;" onchange="updateField(${p.id},'p',this.value)"></td>
     <td class="cs">$${s.toFixed(2)}</td>
-    <td class="cd"><button class="del-btn" onclick="removeProduct(${p.id})" aria-label="Remove">Remove</button></td>
+    <td class="cd"><button class="del-btn" onclick="removeProduct(${p.id})" aria-label="Remove">❌ Remove</button></td>
   </tr>`;}).join('');
   setTotals(sub);
 }
@@ -212,9 +217,9 @@ function renderDash(){
       <div class="o-footer">
         <div class="o-total">$${o.gross.toFixed(2)}<small>incl. 13% tax</small></div>
         <div class="o-actions">
-          <button class="action-btn btn-finish" onclick="finishOrder('${o.id}')" title="Order Finished"><i class="ti ti-circle-check"></i> Finished</button>
-          <button class="action-btn btn-delete" onclick="deleteOrder('${o.id}')" title="Delete Order"><i class="ti ti-trash"></i> Delete</button>
-          <button class="pdf-btn" onclick="exportPDF('${o.id}')"><i class="ti ti-file-type-pdf" aria-hidden="true"></i> PDF</button>
+          <button class="action-btn btn-finish" onclick="finishOrder('${o.id}')" title="Order Finished"><i class="ti ti-circle-check"></i> ✅ Finished</button>
+          <button class="action-btn btn-delete" onclick="deleteOrder('${o.id}')" title="Delete Order"><i class="ti ti-trash"></i> 🗑️ Delete</button>
+          <button class="pdf-btn" onclick="exportPDF('${o.id}')"><i class="ti ti-file-type-pdf" aria-hidden="true"></i> 📄 PDF</button>
         </div>
       </div>
     </div>
@@ -222,45 +227,159 @@ function renderDash(){
 }
 
 function exportPDF(oid){
-  const o=orders.find(x=>x.id===oid);if(!o)return;
-  const rows=o.products.map(p=>`<tr><td>${esc(p.name)}</td><td style="text-align:center">${p.qty}</td><td style="text-align:right">$${p.price.toFixed(2)}</td><td style="text-align:right">$${(p.qty*p.price).toFixed(2)}</td></tr>`).join('');
-  const html=`<!DOCTYPE html><html><head><meta charset="utf-8"><title>${o.id}</title><style>
-    body{font-family:Arial,sans-serif;padding:40px;color:#1a1a2e;max-width:680px;margin:0 auto;}
-    .logo{font-size:22px;font-weight:700;color:#1a6fd4;margin-bottom:2px;}
-    .sub{font-size:12px;color:#64748b;margin-bottom:28px;}
-    .grid{display:grid;grid-template-columns:1fr 1fr;gap:6px 20px;margin-bottom:24px;}
-    .lbl{font-size:10px;color:#64748b;font-weight:700;text-transform:uppercase;letter-spacing:.4px;}
-    .val{font-size:13px;color:#1a1a2e;margin-top:1px;}
-    table{width:100%;border-collapse:collapse;margin-bottom:16px;}
-    thead tr{background:#f0f6ff;}
-    th{font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;padding:8px 9px;text-align:left;border-bottom:2px solid #1a6fd4;}
-    td{padding:8px 9px;font-size:13px;border-bottom:1px solid #e8f1fc;}
-    .tt td{border:none;padding:4px 9px;font-size:13px;}
-    .tt tr.fin td{font-size:15px;font-weight:700;color:#1a6fd4;border-top:2px solid #1a6fd4;padding-top:9px;}
-    .foot{margin-top:32px;font-size:11px;color:#94a3b8;border-top:1px solid #e8f1fc;padding-top:10px;}
-  </style></head><body>
-  <div class="logo">OrderFlow</div>
-  <div class="sub">${esc(o.company)} · Rep: ${esc(o.employee)}</div>
-  <div class="grid">
-    <div><div class="lbl">Order</div><div class="val">${o.id}</div></div>
-    <div><div class="lbl">Date</div><div class="val">${o.date}</div></div>
-    <div><div class="lbl">Customer</div><div class="val">${esc(o.customer.name)}</div></div>
-    <div><div class="lbl">Phone</div><div class="val">${esc(o.customer.phone)}</div></div>
-    <div><div class="lbl">Email</div><div class="val">${esc(o.customer.email)}</div></div>
-    <div><div class="lbl">Address</div><div class="val">${esc(o.customer.addr)}</div></div>
-    <div><div class="lbl">Payment</div><div class="val">${o.payment.method==='cash' ? 'Cash · $'+o.payment.cashAmount.toFixed(2) : 'Card · •••• '+String(o.payment.cardNumber).slice(-4)}</div></div>
-  </div>
-  <table><thead><tr><th>Product</th><th style="text-align:center">Qty</th><th style="text-align:right">Unit price</th><th style="text-align:right">Subtotal</th></tr></thead><tbody>${rows}</tbody></table>
-  <table class="tt" style="width:240px;margin-left:auto;">
-    <tr><td>Subtotal</td><td style="text-align:right">$${o.net.toFixed(2)}</td></tr>
-    <tr><td>Tax (13%)</td><td style="text-align:right">$${o.tax.toFixed(2)}</td></tr>
-    <tr class="fin"><td>Total</td><td style="text-align:right">$${o.gross.toFixed(2)}</td></tr>
-  </table>
-  <div class="foot">OrderFlow · ${esc(o.company)} · ${o.id} · ${o.date}</div>
-  </body></html>`;
-  const w=window.open('','_blank','width=780,height=600');
-  if(w){w.document.write(html);w.document.close();setTimeout(()=>w.print(),400);}
-  else showAlert('Browser Blocked Popup', 'Please allow popups for this page to export and print the order PDF invoice document.');
+  const o=orders.find(x=>x.id===oid); if(!o) return;
+  
+  // Mapeo y renderizado elegante de las filas de productos
+  const rows=o.products.map(p=>`
+    <tr>
+      <td style="font-weight: 500; color: #1e293b;">${esc(p.name)}</td>
+      <td style="text-align: center; color: #475569;">${p.qty}</td>
+      <td style="text-align: right; color: #475569;">$${p.price.toFixed(2)}</td>
+      <td style="text-align: right; font-weight: 600; color: #0f172a;">$${(p.qty*p.price).toFixed(2)}</td>
+    </tr>
+  `).join('');
+
+  // HTML / CSS Premium estructurado para impresión limpia
+  const html=`<!DOCTYPE html>
+  <html>
+  <head>
+    <meta charset="utf-8">
+    <title>Comprobante ${o.id}</title>
+    <style>
+      @page {
+        size: A4;
+        margin: 20mm 16mm;
+      }
+      *, *::before, *::after { box-sizing: border-box; }
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+        margin: 0; padding: 0; color: #1e293b; font-size: 13px; line-height: 1.5;
+      }
+      
+      /* Encabezado */
+      .header-table { width: 100%; border-collapse: collapse; margin-bottom: 30px; }
+      .brand-title { font-size: 28px; font-weight: 800; color: #1a6fd4; letter-spacing: -0.5px; margin: 0; }
+      .brand-subtitle { font-size: 12px; color: #64748b; margin-top: 4px; }
+      .invoice-title { font-size: 22px; font-weight: 700; color: #0f172a; text-align: right; margin: 0; letter-spacing: 0.5px; }
+      .invoice-id { font-size: 14px; font-weight: 700; color: #e05580; text-align: right; margin-top: 4px; }
+      
+      /* Bloques de Información */
+      .info-table { width: 100%; border-collapse: collapse; margin-bottom: 35px; }
+      .info-cell { width: 50%; vertical-align: top; }
+      .info-box { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 16px 18px; margin-right: 10px; }
+      .info-box.right { margin-right: 0; margin-left: 10px; }
+      .sec-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; color: #1a6fd4; margin: 0 0 10px 0; border-bottom: 1px solid #e2e8f0; padding-bottom: 6px; }
+      .info-row { margin-bottom: 6px; font-size: 13px; }
+      .info-lbl { color: #64748b; font-weight: 500; display: inline-block; width: 85px; }
+      .info-val { color: #1e293b; font-weight: 600; }
+      
+      /* Tabla de Productos */
+      .items-table { width: 100%; border-collapse: collapse; margin-bottom: 25px; }
+      .items-table th { background: #0f172a; color: #ffffff; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; padding: 12px 14px; text-align: left; }
+      .items-table th:first-child { border-top-left-radius: 6px; border-bottom-left-radius: 6px; }
+      .items-table th:last-child { border-top-right-radius: 6px; border-bottom-right-radius: 6px; text-align: right; }
+      .items-table td { padding: 12px 14px; border-bottom: 1px solid #e2e8f0; vertical-align: middle; }
+      
+      /* Totales */
+      .summary-table { width: 260px; margin-left: auto; border-collapse: collapse; margin-top: 15px; }
+      .summary-table td { padding: 6px 10px; font-size: 13px; color: #475569; }
+      .summary-table .lbl { text-align: right; font-weight: 500; }
+      .summary-table .val { text-align: right; font-weight: 600; width: 110px; color: #1e293b; }
+      .summary-table tr.total-row td { font-size: 16px; font-weight: 700; color: #1a6fd4; border-top: 2px solid #1a6fd4; padding-top: 10px; }
+      
+      /* Pie de Página */
+      .footer { border-top: 1px solid #e2e8f0; padding-top: 15px; margin-top: 60px; text-align: center; font-size: 11px; color: #94a3b8; font-weight: 500; }
+    </style>
+  </head>
+  <body>
+
+    <!-- Encabezado Principal -->
+    <table class="header-table">
+      <tr>
+        <td>
+          <div class="brand-title">OrderFlow</div>
+          <div class="brand-subtitle">Empresa: <strong>${esc(o.company)}</strong> &middot; Agente: <strong>${esc(o.employee)}</strong></div>
+        </td>
+        <td style="vertical-align: top;">
+          <div class="invoice-title">COMPROBANTE DE COMPRA</div>
+          <div class="invoice-id">${o.id}</div>
+        </td>
+      </tr>
+    </table>
+
+    <!-- Grid de Datos Básicos y del Cliente -->
+    <table class="info-table">
+      <tr>
+        <td class="info-cell">
+          <div class="info-box">
+            <h2 class="sec-title">Detalles del Pedido</h2>
+            <div class="info-row"><span class="info-lbl">Fecha:</span><span class="info-val">${o.date}</span></div>
+            <div class="info-row"><span class="info-lbl">Estado:</span><span class="info-val" style="color:#166534; text-transform:capitalize;">${o.status}</span></div>
+            <div class="info-row"><span class="info-lbl">Método Pago:</span><span class="info-val">${o.payment.method==='cash' ? 'Efectivo' : 'Tarjeta'}</span></div>
+            <div class="info-row"><span class="info-lbl">Referencia:</span><span class="info-val">${o.payment.method==='cash' ? '$'+o.payment.cashAmount.toFixed(2) : '•••• '+String(o.payment.cardNumber).slice(-4)}</span></div>
+          </div>
+        </td>
+        <td class="info-cell">
+          <div class="info-box right">
+            <h2 class="sec-title">Información del Cliente</h2>
+            <div class="info-row"><span class="info-lbl">Nombre:</span><span class="info-val">${esc(o.customer.name)}</span></div>
+            <div class="info-row"><span class="info-lbl">Teléfono:</span><span class="info-val">${esc(o.customer.phone)}</span></div>
+            <div class="info-row"><span class="info-lbl">Email:</span><span class="info-val" style="font-weight:500;">${esc(o.customer.email)}</span></div>
+            <div class="info-row"><span class="info-lbl">Dirección:</span><span class="info-val">${esc(o.customer.addr)}</span></div>
+          </div>
+        </td>
+      </tr>
+    </table>
+
+    <!-- Tabla de Artículos -->
+    <table class="items-table">
+      <thead>
+        <tr>
+          <th style="width: 50%;">Descripción del Producto</th>
+          <th style="width: 15%; text-align: center;">Cant.</th>
+          <th style="width: 15%; text-align: right;">Precio Unit.</th>
+          <th style="width: 20%; text-align: right;">Subtotal</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${rows}
+      </tbody>
+    </table>
+
+    <!-- desglose de Totales Financieros -->
+    <table class="summary-table">
+      <tr>
+        <td class="lbl">Subtotal neto</td>
+        <td class="val">$${o.net.toFixed(2)}</td>
+      </tr>
+      <tr>
+        <td class="lbl">IVA / Impuestos (13%)</td>
+        <td class="val">$${o.tax.toFixed(2)}</td>
+      </tr>
+      <tr class="total-row">
+        <td class="lbl">Total a Pagar</td>
+        <td class="val">$${o.gross.toFixed(2)}</td>
+      </tr>
+    </table>
+
+    <!-- Pie de Página Fijo -->
+    <div class="footer">
+      Documento electrónico emitido por OrderFlow &middot; ¡Gracias por su confianza y preferencia!
+    </div>
+
+  </body>
+  </html>`;
+
+  // Apertura y disparo nativo de la orden de impresión del navegador
+  const w=window.open('','_blank','width=850,height=700');
+  if(w){
+    w.document.write(html);
+    w.document.close();
+    // Añadimos una pequeña espera para garantizar que cargue los estilos en la ventana flotante
+    setTimeout(()=>w.print(), 350);
+  } else {
+    showAlert('Browser Blocked Popup', 'Please allow popups for this page to export and print the order PDF invoice document.');
+  }
 }
 
 function showToast(msg){
@@ -387,4 +506,109 @@ function togglePaymentFields(){
     cardField.style.display = 'flex';
     gsap.fromTo(cardField, { opacity: 0, y: -10 }, { duration: 0.3, opacity: 1, y: 0 });
   }
+}
+// ==========================================
+// ANIMACIONES CONSTANTES Y MICRO-INTERACCIONES
+// ==========================================
+
+window.addEventListener('DOMContentLoaded', () => {
+  // 1. Animación constante (Loop infinito de respiración/flotado en el icono de Setup)
+  if (document.querySelector('.setup-icon i')) {
+    gsap.to(".setup-icon i", {
+      y: -6,
+      duration: 1.8,
+      repeat: -1,
+      yoyo: true,
+      ease: "power1.inOut"
+    });
+  }
+
+  // 2. Animación de respiración constante al logo de la Navbar (Brand)
+  gsap.to(".nav-brand i", {
+    scale: 1.1,
+    duration: 2,
+    repeat: -1,
+    yoyo: true,
+    ease: "power1.inOut"
+  });
+
+  // 3. Animación constante tipo pulso sutil en los botones primarios activos
+  gsap.to(".primary-btn", {
+    boxShadow: "0 6px 20px rgba(26, 111, 212, 0.4)",
+    duration: 1.5,
+    repeat: -1,
+    yoyo: true,
+    ease: "sine.inOut"
+  });
+  
+  // 4. Animación inicial suave para toda la Navbar al cargar la página
+  gsap.from(".navbar", {
+    y: -20,
+    opacity: 0,
+    duration: 0.8,
+    ease: "power2.out"
+  });
+});
+
+function goTo(p){
+  // 1. Validar si el usuario completó el Setup
+  if((p==='order'||p==='dash')&&!setupComplete){
+    showAlert('Navigation Restricted', 'Please complete the profile Setup first before exploring other sections.');
+    return;
+  }
+  
+  // 2. Remover clases activas de todas las páginas y enlaces de navegación
+  ['setup','order','dash'].forEach(x=>{
+    document.getElementById('pg-'+x).classList.remove('active');
+    document.getElementById('nl-'+x).classList.remove('active');
+  });
+  
+  // 3. Activar la página seleccionada
+  const nextPage = document.getElementById('pg-'+p);
+  nextPage.classList.add('active');
+  document.getElementById('nl-'+p).classList.add('active');
+  
+  // 4. Animación constante de entrada con GSAP (Fade In + Desplazamiento sutil)
+  gsap.fromTo(nextPage, 
+    { opacity: 0, x: 15 }, 
+    { duration: 0.4, opacity: 1, x: 0, ease: "power2.out" }
+  );
+
+  // 5. Animación en cascada opcional para los elementos internos de la pestaña activa
+  gsap.from(nextPage.querySelectorAll('.field, .card, .mcard'), {
+    duration: 0.4,
+    y: 15,
+    opacity: 0,
+    stagger: 0.05,
+    ease: "power3.out",
+    clearProps: "all" // Limpia las propiedades para que no afecte estilos CSS nativos
+  });
+
+  // 6. Si es el dashboard, renderizar los datos
+  if(p==='dash') renderDash();
+} 
+
+// Actualización en el Toast (Controlado 100% por GSAP, invisible al iniciar)
+function showToast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  
+  gsap.killTweensOf(t);
+  t.classList.add('show');
+  
+  // Entra flotando de abajo hacia arriba en su eje fijo sin romper layouts
+  gsap.fromTo(t, 
+    { y: 50, opacity: 0, scale: 0.8 },
+    { duration: 0.4, y: 0, opacity: 1, scale: 1, ease: "back.out(1.5)" }
+  );
+  
+  // Se desvanece suavemente al terminar
+  gsap.to(t, {
+    delay: 2.5,
+    duration: 0.3,
+    opacity: 0,
+    y: 20,
+    scale: 0.95,
+    onComplete: () => t.classList.remove('show')
+  });
 }
