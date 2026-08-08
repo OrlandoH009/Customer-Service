@@ -164,11 +164,11 @@ html,body{width:100%;height:100%;}
 .no-orders i{font-size:40px;display:block;margin:0 auto 10px;line-height:1;}
 
 /* descuento */
-.discount-section{display:flex;align-items:center;gap:12px;margin-top:16px;padding:12px 0;border-top:0.5px solid var(--border);flex-wrap:wrap;}
+.discount-section{display:flex;align-items:center;gap:12px;margin-top:34px;padding:12px 0;border-top:0.5px solid var(--border);flex-wrap:wrap;}
 .discount-section label{font-size:13px;font-weight:600;color:var(--muted);}
-.discount-section input{flex:1;min-width:120px;height:38px;border-radius:8px;border:0.5px solid var(--inp-b);background:var(--inp);color:var(--text);padding:0 12px;font-size:14px;outline:none;}
+.discount-section input{flex:1;min-width:100px;height:38px;border-radius:8px;border:0.5px solid var(--inp-b);background:var(--inp);color:var(--text);padding:0 12px;font-size:14px;outline:none;}
 .discount-section input:focus{border-color:var(--blue);}
-.discount-section .disc-btn{height:38px;padding:0 16px;border-radius:8px;border:none;font-weight:600;cursor:pointer;transition:.15s;font-size:13px;}
+.discount-section .disc-btn{height:38px;padding:0 13px;border-radius:8px;border:none;font-weight:600;cursor:pointer;transition:.15s;font-size:13px;}
 .disc-apply{background:var(--blue);color:#fff;}
 .disc-apply:hover{background:var(--blue2);}
 .disc-remove{background:var(--pink-bg);color:var(--pink-t);}
@@ -216,6 +216,12 @@ html,body{width:100%;height:100%;}
 /* LLUVIA DE DINERO */
 .money-rain-container{position:fixed;top:0;left:0;width:100vw;height:100vh;pointer-events:none;z-index:99999;overflow:hidden;}
 .money-emoji{position:absolute;font-size:28px;user-select:none;will-change:transform,opacity;}
+
+.tline.shipping-line{color:var(--blue);}
+.tline.shipping-line .amt{color:var(--blue);}
+.shipping-space{display:flex;flex-direction:column;gap:2px;margin-top:0px;height:52px; width:220px; }
+.shipping-space label{font-size:13px;font-weight:600;color:var(--muted);}
+.shipping-space input{height:38px;border-radius:8px;border:0.5px solid var(--inp-b);background:var(--inp);color:var(--text);padding:0 12px;font-size:14px;outline:none;width:100%;}
 
 @media(max-height:800px){.navbar{height:56px;}.setup-icon{width:56px;height:56px;}.setup-icon i{font-size:28px;}.setup-hero h1{font-size:24px;}.card{padding:18px 20px;}.pg-setup{padding:0;}}
 @media(max-width:800px){.order-layout{grid-template-columns:1fr;}.orders-grid{grid-template-columns:1fr;}}

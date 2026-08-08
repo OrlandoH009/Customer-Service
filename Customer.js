@@ -1,5 +1,12 @@
-let isDark=true,products=[],pid=0,orders=[],empName='',compName='',setupComplete=false;
-let appliedDiscountCode=null, discountPercent=0;
+let isDark = true,
+  products = [],
+  pid = 0,
+  orders = [],
+  empName = '',
+  compName = '',
+  setupComplete = false;
+let appliedDiscountCode = null,
+  discountPercent = 0;
 const DISCOUNT_CODES = {
   'PLEASE': 0.50,
   'SAVE10': 0.10,
@@ -16,7 +23,7 @@ function closeAlert() {
   document.getElementById('custom-alert').classList.remove('show');
 }
 
-function toggleTheme(){
+function toggleTheme() {
   isDark = !isDark;
   document.getElementById('app').className = 'wrap ' + (isDark ? '' : 'light');
   const thEmoji = document.getElementById('th-emoji');
@@ -36,76 +43,80 @@ function toggleTheme(){
   }
 }
 
-function updateBadge(){
-  const e=document.getElementById('s-emp').value.trim();
-  const c=document.getElementById('s-comp').value.trim();
-  const w=document.getElementById('setup-badge');
-  if(e||c){w.style.display='block';document.getElementById('badge-txt').textContent=(e||'—')+' · '+(c||'—');}
-  else w.style.display='none';
+function updateBadge() {
+  const e = document.getElementById('s-emp').value.trim();
+  const c = document.getElementById('s-comp').value.trim();
+  const w = document.getElementById('setup-badge');
+  if (e || c) { w.style.display = 'block';
+    document.getElementById('badge-txt').textContent = (e || '—') + ' · ' + (c || '—'); } else w.style.display = 'none';
 }
 
-function togglePaymentFields(){
-  const method=document.getElementById('payment-method').value;
-  const cashField=document.getElementById('cash-amount-field');
-  const cardField=document.getElementById('card-number-field');
-  if(method==='cash'){cashField.style.display='flex';cardField.style.display='none';}
-  else{cashField.style.display='none';cardField.style.display='flex';}
+function togglePaymentFields() {
+  const method = document.getElementById('payment-method').value;
+  const cashField = document.getElementById('cash-amount-field');
+  const cardField = document.getElementById('card-number-field');
+  if (method === 'cash') { cashField.style.display = 'flex';
+    cardField.style.display = 'none'; } else { cashField.style.display = 'none';
+    cardField.style.display = 'flex'; }
 }
 
-function saveSetup(){
-  empName=document.getElementById('s-emp').value.trim();
-  compName=document.getElementById('s-comp').value.trim();
-  if(!empName||!compName){
+function saveSetup() {
+  empName = document.getElementById('s-emp').value.trim();
+  compName = document.getElementById('s-comp').value.trim();
+  if (!empName || !compName) {
     showAlert('Required Fields', 'Both Employee Name and Company Name fields are required to proceed.');
     return;
   }
-  setupComplete=true;
-  const bar=document.getElementById('emp-bar');
-  document.getElementById('emp-bar-txt').textContent=empName+' · '+compName;
-  bar.style.display='flex';
-  document.getElementById('nl-order').disabled=false;
-  document.getElementById('nl-dash').disabled=false;
+  setupComplete = true;
+  const bar = document.getElementById('emp-bar');
+  document.getElementById('emp-bar-txt').textContent = empName + ' · ' + compName;
+  bar.style.display = 'flex';
+  document.getElementById('nl-order').disabled = false;
+  document.getElementById('nl-dash').disabled = false;
   showToast('✓ Profile saved!');
-  setTimeout(()=>goTo('order'),700);
+  setTimeout(() => goTo('order'), 700);
 }
 
-function addProduct(){
-  const name=document.getElementById('np').value.trim();
-  const qty=parseInt(document.getElementById('nq').value)||1;
-  const price=parseFloat(document.getElementById('npr').value)||0;
-  if(!name){
+function addProduct() {
+  const name = document.getElementById('np').value.trim();
+  const qty = parseInt(document.getElementById('nq').value) || 1;
+  const price = parseFloat(document.getElementById('npr').value) || 0;
+  if (!name) {
     showAlert('Missing Parameter', 'Please fill in the Product Name field before adding.');
     return;
   }
-  if(price<=0){
+  if (price <= 0) {
     showAlert('Invalid Price', 'The product price must be a valid number greater than 0.');
     return;
   }
-  const code = 'P-' + String(pid+1).padStart(3, '0');
-  products.push({id:pid++, name, qty, price, code});
-  document.getElementById('np').value='';
-  document.getElementById('nq').value='1';
-  document.getElementById('npr').value='';
+  const code = 'P-' + String(pid + 1).padStart(3, '0');
+  products.push({ id: pid++, name, qty, price, code });
+  document.getElementById('np').value = '';
+  document.getElementById('nq').value = '1';
+  document.getElementById('npr').value = '';
   renderTable();
 }
 
-function removeProduct(id){products=products.filter(p=>p.id!==id);renderTable();}
+function removeProduct(id) { products = products.filter(p => p.id !== id);
+  renderTable(); }
 
-function updateField(id,f,v){
-  const p=products.find(p=>p.id===id);if(!p)return;
-  if(f==='q')p.qty=Math.max(1,parseInt(v)||1);
-  else if(f==='p')p.price=Math.max(0,parseFloat(v)||0);
-  else if(f==='n')p.name=v.trim() || 'Untitled';
+function updateField(id, f, v) {
+  const p = products.find(p => p.id === id);
+  if (!p) return;
+  if (f === 'q') p.qty = Math.max(1, parseInt(v) || 1);
+  else if (f === 'p') p.price = Math.max(0, parseFloat(v) || 0);
+  else if (f === 'n') p.name = v.trim() || 'Untitled';
   renderTable();
 }
 
-function renderTable(){
-  const tb=document.getElementById('ptbody');
-  if(!products.length){tb.innerHTML='<tr class="empty-r"><td colspan="6">No products added yet</td></tr>';setTotals(0);return;}
-  let sub=0;
-  tb.innerHTML=products.map(p=>{
-    const s=p.qty*p.price;
-    sub+=s;
+function renderTable() {
+  const tb = document.getElementById('ptbody');
+  if (!products.length) { tb.innerHTML = '<tr class="empty-r"><td colspan="6">No products added yet</td></tr>';
+    updateTotals(); return; }
+  let sub = 0;
+  tb.innerHTML = products.map(p => {
+    const s = p.qty * p.price;
+    sub += s;
     return `<tr>
       <td class="cn"><input class="iinput" type="text" value="${esc(p.name)}" onchange="updateField(${p.id},'n',this.value)" style="width:100%;"></td>
       <td class="cc" style="font-size:12px;color:var(--muted);">${p.code}</td>
@@ -115,34 +126,42 @@ function renderTable(){
       <td class="cd"><button class="del-btn" onclick="removeProduct(${p.id})" aria-label="Remove">❌ Remove</button></td>
     </tr>`;
   }).join('');
-  setTotals(sub);
+  updateTotals();
 }
 
-function setTotals(net){
-  const discount = discountPercent || 0;
-  const discountAmount = net * discount;
+function updateTotals() {
+  const net = products.reduce((s, p) => s + p.qty * p.price, 0);
+  const discountAmount = net * discountPercent;
   const discountedNet = net - discountAmount;
-  const tax = discountedNet * 0.13;
-  const gross = discountedNet + tax;
+  const shipping = parseFloat(document.getElementById('shipping-cost').value) || 0;
+  const taxable = discountedNet + shipping;
+  const tax = taxable * 0.13;
+  const gross = taxable + tax;
 
   document.getElementById('t-net').textContent = '$' + net.toFixed(2);
   document.getElementById('t-tax').textContent = '$' + tax.toFixed(2);
   document.getElementById('t-gross').textContent = '$' + gross.toFixed(2);
 
+  // Línea de descuento
   const discountLine = document.getElementById('discount-line');
   const discountLabel = document.getElementById('discount-label');
   const discountAmountSpan = document.getElementById('discount-amount');
-
-  if (discount > 0 && net > 0) {
+  if (discountPercent > 0 && net > 0) {
     discountLine.style.display = 'flex';
-    discountLabel.textContent = (discount * 100).toFixed(0) + '%';
+    discountLabel.textContent = (discountPercent * 100).toFixed(0) + '%';
     discountAmountSpan.textContent = '-$' + discountAmount.toFixed(2);
   } else {
     discountLine.style.display = 'none';
   }
+
+  // Línea de envío SIEMPRE visible
+  const shippingLine = document.getElementById('shipping-line');
+  const shippingAmountSpan = document.getElementById('shipping-amount');
+  shippingLine.style.display = 'flex';
+  shippingAmountSpan.textContent = '$' + shipping.toFixed(2);
 }
 
-function applyDiscount(){
+function applyDiscount() {
   const input = document.getElementById('discount-input');
   const code = input.value.trim().toUpperCase();
   if (!code) {
@@ -160,120 +179,130 @@ function applyDiscount(){
   }
   appliedDiscountCode = code;
   discountPercent = percent;
-  document.getElementById('discount-status').textContent = '✅ ' + code + ' (' + (percent*100).toFixed(0) + '%)';
+  document.getElementById('discount-status').textContent = '✅ ' + code + ' (' + (percent * 100).toFixed(0) + '%)';
   document.getElementById('discount-input').value = '';
-  // Recalcular totales
-  const net = products.reduce((s,p) => s + p.qty * p.price, 0);
-  setTotals(net);
+  updateTotals();
   showToast('🎉 Discount applied: ' + code);
 }
 
-function removeDiscount(){
+function removeDiscount() {
   appliedDiscountCode = null;
   discountPercent = 0;
   document.getElementById('discount-status').textContent = '';
   document.getElementById('discount-input').value = '';
-  const net = products.reduce((s,p) => s + p.qty * p.price, 0);
-  setTotals(net);
+  updateTotals();
   showToast('✕ Discount removed');
 }
 
-function generateOrder(){
-  if(!empName){
+function generateOrder() {
+  if (!empName) {
     showAlert('Profile Setup Required', 'Complete your system setup profile before generating orders.');
     return;
   }
-  const name=document.getElementById('c-name').value.trim();
-  const email=document.getElementById('c-email').value.trim();
-  const phone=document.getElementById('c-phone').value.trim();
-  const addr=document.getElementById('c-addr').value.trim();
-  
-  if(!name||!email||!phone||!addr){
+  const name = document.getElementById('c-name').value.trim();
+  const email = document.getElementById('c-email').value.trim();
+  const phone = document.getElementById('c-phone').value.trim();
+  const addr = document.getElementById('c-addr').value.trim();
+
+  if (!name || !email || !phone || !addr) {
     showAlert('Incomplete Information', 'All customer parameters (Name, Email, Phone, and Address) must be filled out to continue.');
     return;
   }
-  
+
   const allowedDomains = ['gmail.com', 'hotmail.com', 'yahoo.com', 'outlook.com', 'icloud.com', 'live.com'];
   const emailParts = email.split('@');
-  
-  if(emailParts.length !== 2 || !allowedDomains.includes(emailParts[1].toLowerCase())){
+
+  if (emailParts.length !== 2 || !allowedDomains.includes(emailParts[1].toLowerCase())) {
     showAlert('Invalid Email Domain', 'The email address must include a valid format with an "@" character followed by a recognized domain provider (e.g., gmail.com, hotmail.com, yahoo.com).');
     return;
   }
-  
-  if(!products.length){
+
+  if (!products.length) {
     showAlert('Empty Product List', 'You must add at least one item to the products summary table to generate a new transaction.');
     return;
   }
 
-  const paymentMethod=document.getElementById('payment-method').value;
-  let payment={method:paymentMethod};
-  if(paymentMethod==='cash'){
-    const cashAmount=parseFloat(document.getElementById('cash-amount').value)||0;
-    if(cashAmount<=0){showAlert('Missing Cash Amount', 'Please enter a valid cash amount greater than 0.');return;}
-    payment.cashAmount=cashAmount;
+  const paymentMethod = document.getElementById('payment-method').value;
+  let payment = { method: paymentMethod };
+  if (paymentMethod === 'cash') {
+    const cashAmount = parseFloat(document.getElementById('cash-amount').value) || 0;
+    if (cashAmount <= 0) { showAlert('Missing Cash Amount', 'Please enter a valid cash amount greater than 0.'); return; }
+    payment.cashAmount = cashAmount;
   } else {
-    const cardNumber=document.getElementById('card-number').value.trim();
-    if(!cardNumber){showAlert('Missing Card Number', 'Please enter the credit card number to continue.');return;}
-    payment.cardNumber=cardNumber;
+    const cardNumber = document.getElementById('card-number').value.trim();
+    if (!cardNumber) { showAlert('Missing Card Number', 'Please enter the credit card number to continue.'); return; }
+    payment.cardNumber = cardNumber;
   }
-  
-  const net=products.reduce((s,p)=>s+p.qty*p.price,0);
+
+  const net = products.reduce((s, p) => s + p.qty * p.price, 0);
   const discountAmount = net * discountPercent;
   const discountedNet = net - discountAmount;
-  const tax = discountedNet * 0.13;
-  const gross = discountedNet + tax;
-  
-  const now=new Date();
-  const oid='ORD-'+String(orders.length+1).padStart(3,'0');
+  const shippingCost = parseFloat(document.getElementById('shipping-cost').value) || 0;
+  const taxable = discountedNet + shippingCost;
+  const tax = taxable * 0.13;
+  const gross = taxable + tax;
+
+  const now = new Date();
+  const oid = 'ORD-' + String(orders.length + 1).padStart(3, '0');
   orders.push({
-    id:oid,customer:{name,email,phone,addr},employee:empName,company:compName,
-    products:[...products],net,tax,gross,status:'pending',payment,
+    id: oid,
+    customer: { name, email, phone, addr },
+    employee: empName,
+    company: compName,
+    products: [...products],
+    net,
+    tax,
+    gross,
+    status: 'pending',
+    payment,
     discountCode: appliedDiscountCode || null,
     discountPercent: discountPercent || 0,
     discountAmount: discountAmount || 0,
-    date:now.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})
+    shippingCost: shippingCost || 0,
+    date: now.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
   });
-  products=[];pid=0;
-  ['c-name','c-email','c-phone','c-addr','cash-amount','card-number'].forEach(x=>document.getElementById(x).value='');
-  document.getElementById('payment-method').value='cash';
+  products = [];
+  pid = 0;
+  ['c-name', 'c-email', 'c-phone', 'c-addr', 'cash-amount', 'card-number'].forEach(x => document.getElementById(x).value = '');
+  document.getElementById('payment-method').value = 'cash';
   togglePaymentFields();
-  // Resetear descuento
-  removeDiscount(); // limpia el descuento y el status
+  // Resetear descuento y envío
+  removeDiscount();
+  document.getElementById('shipping-cost').value = 0;
   renderTable();
-  showToast('✓ '+oid+' created!');
+  showToast('✓ ' + oid + ' created!');
   triggerMoneyRain();
-  setTimeout(()=>goTo('dash'),800);
+  setTimeout(() => goTo('dash'), 800);
 }
 
-function finishOrder(oid){
-  const o=orders.find(x=>x.id===oid);
-  if(!o) return;
-  if(o.status==='finished'){
+function finishOrder(oid) {
+  const o = orders.find(x => x.id === oid);
+  if (!o) return;
+  if (o.status === 'finished') {
     showAlert('Already Finished', 'This transaction has already been completed and processed.');
     return;
   }
-  o.status='finished';
+  o.status = 'finished';
   showToast('✓ Order marked as Finished');
   renderDash();
 }
 
-function deleteOrder(oid){
-  orders=orders.filter(x=>x.id!==oid);
+function deleteOrder(oid) {
+  orders = orders.filter(x => x.id !== oid);
   showToast('✕ Order deleted successfully');
   renderDash();
 }
 
-function renderDash(){
-  const rev=orders.reduce((s,o)=>s+o.net,0);
-  const tot=orders.reduce((s,o)=>s+o.gross,0);
-  document.getElementById('m-count').textContent=orders.length;
-  document.getElementById('m-rev').textContent='$'+rev.toFixed(2);
-  document.getElementById('m-total').textContent='$'+tot.toFixed(2);
-  const g=document.getElementById('orders-grid');
-  
-  if(!orders.length){
-    g.innerHTML=`
+function renderDash() {
+  const rev = orders.reduce((s, o) => s + o.net, 0);
+  const tot = orders.reduce((s, o) => s + o.gross, 0);
+  document.getElementById('m-count').textContent = orders.length;
+  document.getElementById('m-rev').textContent = '$' + rev.toFixed(2);
+  document.getElementById('m-total').textContent = '$' + tot.toFixed(2);
+  const g = document.getElementById('orders-grid');
+
+  if (!orders.length) {
+    g.innerHTML = `
       <div class="no-orders">
         <div class="wild-west-container" id="west-stage">
           <div class="desert-cactus cactus-1">🌵</div>
@@ -289,10 +318,10 @@ function renderDash(){
     initTumbleweeds();
     return;
   }
-  
-  g.innerHTML=orders.slice().reverse().map(o=>{
+
+  g.innerHTML = orders.slice().reverse().map(o => {
     const discountInfo = (o.discountCode && o.discountPercent > 0) ?
-      `Discount: ${o.discountCode} (${(o.discountPercent*100).toFixed(0)}%) -$${o.discountAmount.toFixed(2)}` :
+      'Discount: ' + o.discountCode + ' (' + (o.discountPercent * 100).toFixed(0) + '%) -$' + o.discountAmount.toFixed(2) :
       '';
     return `
     <div class="ocard">
@@ -304,10 +333,11 @@ function renderDash(){
         <span><i class="ti ti-mail" aria-hidden="true"></i>${esc(o.customer.email)}</span>
         <span><i class="ti ti-phone" aria-hidden="true"></i>${esc(o.customer.phone)}</span>
         <span><i class="ti ti-map-pin" aria-hidden="true"></i>${esc(o.customer.addr)}</span>
-        <span><i class="ti ti-credit-card" aria-hidden="true"></i>${o.payment.method==='cash' ? 'Cash · $'+o.payment.cashAmount.toFixed(2) : 'Card · •••• '+String(o.payment.cardNumber).slice(-4)}</span>
+        <span><i class="ti ti-credit-card" aria-hidden="true"></i>${o.payment.method === 'cash' ? 'Cash · $' + o.payment.cashAmount.toFixed(2) : 'Card · •••• ' + String(o.payment.cardNumber).slice(-4)}</span>
         ${discountInfo ? `<span><i class="ti ti-tag" aria-hidden="true"></i>${discountInfo}</span>` : ''}
+        ${o.shippingCost > 0 ? `<span><i class="ti ti-truck" aria-hidden="true"></i>Shipping: $${o.shippingCost.toFixed(2)}</span>` : ''}
       </div>
-      <div class="o-chips">${o.products.map(p=>`<span class="o-chip">${esc(p.name)} ×${p.qty}</span>`).join('')}</div>
+      <div class="o-chips">${o.products.map(p => `<span class="o-chip">${esc(p.name)} ×${p.qty}</span>`).join('')}</div>
       <div class="o-footer">
         <div class="o-total">$${o.gross.toFixed(2)}<small>incl. 13% tax</small></div>
         <div class="o-actions">
@@ -320,27 +350,34 @@ function renderDash(){
   `}).join('');
 }
 
-function exportPDF(oid){
-  const o=orders.find(x=>x.id===oid); if(!o) return;
-  
-  const rows=o.products.map(p=>`
+function exportPDF(oid) {
+  const o = orders.find(x => x.id === oid);
+  if (!o) return;
+
+  const rows = o.products.map(p => `
     <tr>
       <td style="font-weight:500;color:#1e293b;">${esc(p.name)} <span style="color:#94a3b8;font-size:11px;">(${p.code})</span></td>
       <td style="text-align:center;color:#475569;">${p.qty}</td>
       <td style="text-align:right;color:#475569;">$${p.price.toFixed(2)}</td>
-      <td style="text-align:right;font-weight:600;color:#0f172a;">$${(p.qty*p.price).toFixed(2)}</td>
+      <td style="text-align:right;font-weight:600;color:#0f172a;">$${(p.qty * p.price).toFixed(2)}</td>
     </tr>
   `).join('');
 
-  // Línea de descuento en PDF
   const discountRow = (o.discountCode && o.discountPercent > 0) ? `
     <tr>
-      <td colspan="3" style="text-align:right;font-weight:500;color:#e05580;">Descuento (${o.discountCode} - ${(o.discountPercent*100).toFixed(0)}%)</td>
+      <td colspan="3" style="text-align:right;font-weight:500;color:#e05580;">Descuento (${o.discountCode} - ${(o.discountPercent * 100).toFixed(0)}%)</td>
       <td style="text-align:right;font-weight:600;color:#e05580;">-$${o.discountAmount.toFixed(2)}</td>
     </tr>
   ` : '';
 
-  const html=`<!DOCTYPE html>
+  const shippingRow = (o.shippingCost > 0) ? `
+    <tr>
+      <td colspan="3" style="text-align:right;font-weight:500;color:#1a6fd4;">Costo de envío</td>
+      <td style="text-align:right;font-weight:600;color:#1a6fd4;">$${o.shippingCost.toFixed(2)}</td>
+    </tr>
+  ` : '';
+
+  const html = `<!DOCTYPE html>
   <html>
   <head>
     <meta charset="utf-8">
@@ -374,6 +411,7 @@ function exportPDF(oid){
       .summary-table .val { text-align:right; font-weight:600; width:110px; color:#1e293b; }
       .summary-table tr.total-row td { font-size:16px; font-weight:700; color:#1a6fd4; border-top:2px solid #1a6fd4; padding-top:10px; }
       .summary-table tr.discount-row td { color:#e05580; font-weight:500; }
+      .summary-table tr.shipping-row td { color:#1a6fd4; font-weight:500; }
       .footer { border-top:1px solid #e2e8f0; padding-top:15px; margin-top:60px; text-align:center; font-size:11px; color:#94a3b8; font-weight:500; }
     </style>
   </head>
@@ -399,9 +437,10 @@ function exportPDF(oid){
               <h2 class="sec-title">Detalles del Pedido</h2>
               <div class="info-row"><span class="info-lbl">Fecha:</span><span class="info-val">${o.date}</span></div>
               <div class="info-row"><span class="info-lbl">Estado:</span><span class="info-val" style="color:#166534;text-transform:capitalize;">${o.status}</span></div>
-              <div class="info-row"><span class="info-lbl">Método Pago:</span><span class="info-val">${o.payment.method==='cash' ? 'Efectivo' : 'Tarjeta'}</span></div>
-              <div class="info-row"><span class="info-lbl">Referencia:</span><span class="info-val">${o.payment.method==='cash' ? '$'+o.payment.cashAmount.toFixed(2) : '•••• '+String(o.payment.cardNumber).slice(-4)}</span></div>
-              ${o.discountCode ? `<div class="info-row"><span class="info-lbl">Descuento:</span><span class="info-val" style="color:#e05580;">${o.discountCode} (${(o.discountPercent*100).toFixed(0)}%) -$${o.discountAmount.toFixed(2)}</span></div>` : ''}
+              <div class="info-row"><span class="info-lbl">Método Pago:</span><span class="info-val">${o.payment.method === 'cash' ? 'Efectivo' : 'Tarjeta'}</span></div>
+              <div class="info-row"><span class="info-lbl">Referencia:</span><span class="info-val">${o.payment.method === 'cash' ? '$' + o.payment.cashAmount.toFixed(2) : '•••• ' + String(o.payment.cardNumber).slice(-4)}</span></div>
+              ${o.discountCode ? `<div class="info-row"><span class="info-lbl">Descuento:</span><span class="info-val" style="color:#e05580;">${o.discountCode} (${(o.discountPercent * 100).toFixed(0)}%) -$${o.discountAmount.toFixed(2)}</span></div>` : ''}
+              ${o.shippingCost > 0 ? `<div class="info-row"><span class="info-lbl">Envío:</span><span class="info-val" style="color:#1a6fd4;">$${o.shippingCost.toFixed(2)}</span></div>` : ''}
             </div>
           </td>
           <td class="info-cell">
@@ -433,7 +472,9 @@ function exportPDF(oid){
       <table class="summary-table">
         <tr><td class="lbl">Subtotal neto</td><td class="val">$${o.net.toFixed(2)}</td></tr>
         ${discountRow}
+        ${shippingRow}
         <tr><td class="lbl">IVA / Impuestos (13%)</td><td class="val">$${o.tax.toFixed(2)}</td></tr>
+        <tr><td class="lbl">Shipping</td><td class="val">$${o.shippingCost.toFixed(2)}</td></tr>
         <tr class="total-row"><td class="lbl">Total a Pagar</td><td class="val">$${o.gross.toFixed(2)}</td></tr>
       </table>
 
@@ -444,22 +485,24 @@ function exportPDF(oid){
   </body>
   </html>`;
 
-  const w=window.open('','_blank','width=850,height=700');
-  if(w){
+  const w = window.open('', '_blank', 'width=850,height=700');
+  if (w) {
     w.document.write(html);
     w.document.close();
-    setTimeout(()=>w.print(), 350);
+    setTimeout(() => w.print(), 350);
   } else {
     showAlert('Browser Blocked Popup', 'Please allow popups for this page to export and print the order PDF invoice document.');
   }
 }
 
-function showToast(msg){
-  const t=document.getElementById('toast');
-  t.textContent=msg;t.classList.add('show');
-  setTimeout(()=>t.classList.remove('show'),3000);
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3000);
 }
-function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+
+function esc(s) { return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
 
 togglePaymentFields();
 
@@ -469,23 +512,23 @@ window.addEventListener('DOMContentLoaded', () => {
   gsap.from(".pg-setup .card", { duration: 1, y: 50, opacity: 0, delay: 0.2, ease: "power3.out" });
 });
 
-function goTo(p){
-  if((p==='order'||p==='dash')&&!setupComplete){
+function goTo(p) {
+  if ((p === 'order' || p === 'dash') && !setupComplete) {
     showAlert('Navigation Restricted', 'Please complete the profile Setup first before exploring other sections.');
     return;
   }
-  ['setup','order','dash'].forEach(x=>{
-    document.getElementById('pg-'+x).classList.remove('active');
-    document.getElementById('nl-'+x).classList.remove('active');
+  ['setup', 'order', 'dash'].forEach(x => {
+    document.getElementById('pg-' + x).classList.remove('active');
+    document.getElementById('nl-' + x).classList.remove('active');
   });
-  const nextPage = document.getElementById('pg-'+p);
+  const nextPage = document.getElementById('pg-' + p);
   nextPage.classList.add('active');
-  document.getElementById('nl-'+p).classList.add('active');
+  document.getElementById('nl-' + p).classList.add('active');
   gsap.fromTo(nextPage, { opacity: 0, x: 20 }, { duration: 0.4, opacity: 1, x: 0, ease: "power2.out" });
-  if(p==='dash') renderDash();
+  if (p === 'dash') renderDash();
 }
 
-function showToast(msg){
+function showToast(msg) {
   const t = document.getElementById('toast');
   t.textContent = msg;
   gsap.killTweensOf(t);
@@ -511,11 +554,11 @@ function closeAlert() {
   gsap.to(overlay, { duration: 0.2, opacity: 0, onComplete: () => overlay.classList.remove('show') });
 }
 
-function togglePaymentFields(){
+function togglePaymentFields() {
   const method = document.getElementById('payment-method').value;
   const cashField = document.getElementById('cash-amount-field');
   const cardField = document.getElementById('card-number-field');
-  if(method === 'cash'){
+  if (method === 'cash') {
     cardField.style.display = 'none';
     cashField.style.display = 'flex';
     gsap.fromTo(cashField, { opacity: 0, y: -10 }, { duration: 0.3, opacity: 1, y: 0 });
@@ -536,18 +579,18 @@ window.addEventListener('DOMContentLoaded', () => {
   gsap.from(".navbar", { y: -20, opacity: 0, duration: 0.8, ease: "power2.out" });
 });
 
-function goTo(p){
-  if((p==='order'||p==='dash')&&!setupComplete){
+function goTo(p) {
+  if ((p === 'order' || p === 'dash') && !setupComplete) {
     showAlert('Navigation Restricted', 'Please complete the profile Setup first before exploring other sections.');
     return;
   }
-  ['setup','order','dash'].forEach(x=>{
-    document.getElementById('pg-'+x).classList.remove('active');
-    document.getElementById('nl-'+x).classList.remove('active');
+  ['setup', 'order', 'dash'].forEach(x => {
+    document.getElementById('pg-' + x).classList.remove('active');
+    document.getElementById('nl-' + x).classList.remove('active');
   });
-  const nextPage = document.getElementById('pg-'+p);
+  const nextPage = document.getElementById('pg-' + p);
   nextPage.classList.add('active');
-  document.getElementById('nl-'+p).classList.add('active');
+  document.getElementById('nl-' + p).classList.add('active');
   gsap.fromTo(nextPage, { opacity: 0, x: 15 }, { duration: 0.4, opacity: 1, x: 0, ease: "power2.out" });
   gsap.from(nextPage.querySelectorAll('.field, .card, .mcard'), {
     duration: 0.4,
@@ -557,7 +600,7 @@ function goTo(p){
     ease: "power3.out",
     clearProps: "all"
   });
-  if(p==='dash') renderDash();
+  if (p === 'dash') renderDash();
 }
 
 // Tumbleweeds
@@ -565,11 +608,12 @@ function initTumbleweeds() {
   const stage = document.getElementById('west-stage');
   const w1 = document.getElementById('weed1');
   const w2 = document.getElementById('weed2');
-  if(!stage || !w1 || !w2) return;
+  if (!stage || !w1 || !w2) return;
   const stageW = stage.clientWidth;
   let pos1 = { x: stageW * 0.15, y: 0, vx: 1.1, size: 35 };
   let pos2 = { x: stageW * 0.75, y: 0, vx: -0.9, size: 35 };
   gsap.ticker.remove(updateLoop);
+
   function updateLoop() {
     if (!document.getElementById('west-stage')) { gsap.ticker.remove(updateLoop); return; }
     const currentWidth = stage.clientWidth;
@@ -577,17 +621,22 @@ function initTumbleweeds() {
     pos2.x += pos2.vx;
     pos1.y = Math.abs(Math.sin(pos1.x * 0.025)) * 16;
     pos2.y = Math.abs(Math.sin(pos2.x * 0.022)) * 14;
-    if (pos1.x <= 0) { pos1.x = 0; pos1.vx *= -1; }
-    if (pos1.x >= currentWidth - pos1.size) { pos1.x = currentWidth - pos1.size; pos1.vx *= -1; }
-    if (pos2.x <= 0) { pos2.x = 0; pos2.vx *= -1; }
-    if (pos2.x >= currentWidth - pos2.size) { pos2.x = currentWidth - pos2.size; pos2.vx *= -1; }
+    if (pos1.x <= 0) { pos1.x = 0;
+      pos1.vx *= -1; }
+    if (pos1.x >= currentWidth - pos1.size) { pos1.x = currentWidth - pos1.size;
+      pos1.vx *= -1; }
+    if (pos2.x <= 0) { pos2.x = 0;
+      pos2.vx *= -1; }
+    if (pos2.x >= currentWidth - pos2.size) { pos2.x = currentWidth - pos2.size;
+      pos2.vx *= -1; }
     let dist = Math.abs(pos1.x - pos2.x);
     if (dist < pos1.size) {
       let temp = pos1.vx;
       pos1.vx = pos2.vx;
       pos2.vx = temp;
-      if(pos1.x < pos2.x) { pos1.x -= 1; pos2.x += 1; }
-      else { pos1.x += 1; pos2.x -= 1; }
+      if (pos1.x < pos2.x) { pos1.x -= 1;
+        pos2.x += 1; } else { pos1.x += 1;
+        pos2.x -= 1; }
     }
     gsap.set(w1, { x: pos1.x, y: -pos1.y, rotation: pos1.x * 1.5 });
     gsap.set(w2, { x: pos2.x, y: -pos2.y, rotation: pos2.x * -1.5 });
@@ -606,7 +655,7 @@ function triggerMoneyRain() {
     const el = document.createElement('div');
     el.className = 'money-emoji';
     el.textContent = emojis[Math.floor(Math.random() * emojis.length)];
-    const randomX = Math.random() * 100; 
+    const randomX = Math.random() * 100;
     el.style.left = randomX + 'vw';
     el.style.top = '-50px';
     rainContainer.appendChild(el);

@@ -109,12 +109,21 @@
             <button class="disc-btn disc-apply" onclick="applyDiscount()">Apply</button>
             <button class="disc-btn disc-remove" onclick="removeDiscount()">Remove</button>
             <span class="discount-status" id="discount-status"></span>
+            <div class="field shipping-space" style="margin-top:8px;">
+              <label for="shipping-cost">Shipping cost ($)</label>
+              <input type="number" id="shipping-cost" min="0" step="0.01" value="0" oninput="updateTotals()">
+            </div>
           </div>
           <div class="totals-box">
             <div class="tline"><span>Subtotal</span><span id="t-net">$0.00</span></div>
             <div class="tline discount-line" id="discount-line" style="display:none;">
               <span>Discount (<span id="discount-label">0%</span>)</span>
               <span id="discount-amount">-$0.00</span>
+            </div>
+            <!-- Línea de envío (se muestra solo si > 0) -->
+            <div class="tline shipping-line" id="shipping-line" style="display:flex;">
+              <span>Shipping</span>
+              <span id="shipping-amount">$0.00</span>
             </div>
             <div class="tline"><span>Tax <span class="tax-pill">13%</span></span><span id="t-tax">$0.00</span></div>
             <div class="tline fin"><span>Total</span><span class="amt" id="t-gross">$0.00</span></div>
@@ -151,4 +160,4 @@
 <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
 <script src="Customer.js"></script>
 </body>
-</html>
+</html>z|
