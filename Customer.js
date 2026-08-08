@@ -296,11 +296,38 @@ function deleteOrder(oid) {
 function renderDash() {
   const rev = orders.reduce((s, o) => s + o.net, 0);
   const tot = orders.reduce((s, o) => s + o.gross, 0);
-  document.getElementById('m-count').textContent = orders.length;
-  document.getElementById('m-rev').textContent = '$' + rev.toFixed(2);
-  document.getElementById('m-total').textContent = '$' + tot.toFixed(2);
+  
+  const countEl = document.getElementById('m-count');
+  const revEl = document.getElementById('m-rev');
+  const totalEl = document.getElementById('m-total');
+  
+  // 1. NUEVA ANIMACIÓN DE CONTEO CON GSAP
+  gsap.to(countEl, { 
+    innerHTML: orders.length, 
+    duration: 1.2, 
+    snap: { innerHTML: 1 }, 
+    ease: "power2.out" 
+  });
+  
+  gsap.to(revEl, { 
+    innerHTML: rev, 
+    duration: 1.2, 
+    snap: { innerHTML: 0.01 }, 
+    onUpdate: function() { revEl.innerHTML = '$' + Number(this.targets()[0].innerHTML).toFixed(2); }, 
+    ease: "power2.out" 
+  });
+  
+  gsap.to(totalEl, { 
+    innerHTML: tot, 
+    duration: 1.2, 
+    snap: { innerHTML: 0.01 }, 
+    onUpdate: function() { totalEl.innerHTML = '$' + Number(this.targets()[0].innerHTML).toFixed(2); }, 
+    ease: "power2.out" 
+  });
+
   const g = document.getElementById('orders-grid');
 
+  // 2. TU VIEJO OESTE INTACTO
   if (!orders.length) {
     g.innerHTML = `
       <div class="no-orders">
@@ -319,6 +346,7 @@ function renderDash() {
     return;
   }
 
+  // 3. EL RENDERIZADO NORMAL DE LAS TARJETAS
   g.innerHTML = orders.slice().reverse().map(o => {
     const discountInfo = (o.discountCode && o.discountPercent > 0) ?
       'Discount: ' + o.discountCode + ' (' + (o.discountPercent * 100).toFixed(0) + '%) -$' + o.discountAmount.toFixed(2) :
