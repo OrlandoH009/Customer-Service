@@ -18,12 +18,11 @@ html,body{width:100%;height:100%;}
 }
 
 /* MODO CLARO SECUNDARIO */
-/* 1. SUAVIZAR EL MODO CLARO (Menos fuerte a la vista, tonos grisáceos/azulados suaves) */
 .light {
-  --card: #f8fafc; /* Blanco roto más suave */
-  --bg: #e2e8f0;   /* Gris azulado apagado en lugar de azul brillante */
+  --card: #f8fafc;
+  --bg: #e2e8f0;
   --border: rgba(26,111,212,0.12);
-  --text: #1e293b; /* Texto oscuro pero no negro puro */
+  --text: #1e293b;
   --muted: #64748b;
   --inp: #ffffff;
   --inp-b: rgba(100,116,139,0.25);
@@ -31,7 +30,7 @@ html,body{width:100%;height:100%;}
   --metric-t: #0f172a;
   --tbl-h: #f1f5f9;
   --tbl-b: rgba(26,111,212,0.06);
-  --nav: #f1f5f9;  /* Navbar integrada con tonos grisáceos */
+  --nav: #f1f5f9;
   --nav-b: rgba(26,111,212,0.1);
   --pink-bg: #ffe4e6;
   --pink-t: #9f1239;
@@ -58,7 +57,7 @@ html,body{width:100%;height:100%;}
 .theme-btn{background:var(--metric);border:none;border-radius:8px;width:34px;height:34px;display:flex;align-items:center;justify-content:center;cursor:pointer;}
 .theme-btn i{font-size:17px;color:var(--blue);line-height:1;}
 
-.page{display:none;padding:24px;overflow-y:auto;flex:1;}
+.page{display:none;padding:24px;overflow-y:auto;flex:1;height:100%;}
 .page.active{display:block;}
 
 .pg-setup{max-width:100%;width:100%;margin:0;padding:0;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100%;}
@@ -89,7 +88,7 @@ html,body{width:100%;height:100%;}
 .primary-btn i{font-size:17px;line-height:1;}
 .primary-btn:hover{opacity:.95;transform:translateY(-2px);box-shadow:0 6px 20px rgba(26,111,212,.35);}
 
-.order-layout{display:grid;grid-template-columns:1fr 1fr;gap:20px;align-items:start;height:100%;}
+.order-layout{display:grid;grid-template-columns:1fr 1fr;gap:20px;align-items:start;height:auto;}
 .emp-bar{display:flex;align-items:center;gap:8px;background:var(--chip-bg);border:0.5px solid rgba(55,138,221,.2);border-radius:9px;padding:10px 16px;margin-bottom:16px;font-size:14px;color:var(--chip-t);font-weight:500;}
 .emp-bar i{font-size:16px;line-height:1;}
 
@@ -107,7 +106,7 @@ html,body{width:100%;height:100%;}
 .ptable tbody tr:hover{background:var(--tbl-h);}
 .ptable tbody tr:last-child{border-bottom:none;}
 .ptable td{padding:10px 10px;font-size:14px;color:var(--text);vertical-align:middle;}
-.ptable .cn{width:38%}.ptable .cq{width:13%}.ptable .cp{width:18%}.ptable .cs{width:19%;font-weight:500;color:var(--blue);}.ptable .cd{width:12%;text-align:center;}
+.ptable .cn{width:28%}.ptable .cc{width:10%}.ptable .cq{width:12%}.ptable .cp{width:18%}.ptable .cs{width:19%;font-weight:500;color:var(--blue);}.ptable .cd{width:13%;text-align:center;}
 .iinput{border:0.5px solid var(--inp-b);border-radius:6px;height:33px;font-size:13px;padding:0 8px;background:var(--inp);color:var(--text);font-family:var(--font-sans);outline:none;width:100%;}
 .iinput:focus{border-color:var(--blue);}
 .del-btn{background:var(--pink-bg);border:0.5px solid rgba(224,85,128,.22);border-radius:6px;width:auto;height:27px;display:flex;align-items:center;justify-content:center;cursor:pointer;margin:0 auto;color:var(--pink-t);padding:2px;font-family:var(--font-sans);font-size:12px;font-weight:500;}
@@ -119,6 +118,10 @@ html,body{width:100%;height:100%;}
 .tline.fin{font-size:17px;font-weight:600;color:var(--text);padding-top:11px;border-top:0.5px solid var(--border);margin-top:10px;}
 .tline.fin .amt{color:var(--blue);}
 .tax-pill{background:var(--pink-bg);color:var(--pink-t);font-size:11px;border-radius:5px;padding:2px 6px;font-weight:500;margin-left:4px;}
+
+/* línea de descuento */
+.tline.discount-line{color:var(--pink);font-weight:500;}
+.tline.discount-line .amt{color:var(--pink);}
 
 .metrics{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:20px;}
 .mcard{background:var(--metric);border-radius:12px;padding:24px 28px;transition:background .25s,transform .12s,box-shadow .15s;box-shadow:0 2px 8px rgba(26,111,212,.1);border:0.5px solid rgba(26,111,212,.15);}
@@ -146,7 +149,6 @@ html,body{width:100%;height:100%;}
 .o-total{font-size:15px;font-weight:500;color:var(--blue);}
 .o-total small{font-size:11px;color:var(--muted);font-weight:400;margin-left:3px;}
 
-/* CONTENEDOR DE ACCIONES EN DASHBOARD */
 .o-actions{display:flex;gap:6px;align-items:center;}
 .action-btn{display:inline-flex;align-items:center;justify-content:center;gap:4px;padding:6px 10px;border-radius:8px;font-size:12px;font-weight:500;cursor:pointer;border:0.5px solid transparent;transition:all 0.15s ease;}
 .action-btn i{font-size:14px;line-height:1;}
@@ -161,246 +163,59 @@ html,body{width:100%;height:100%;}
 .no-orders{text-align:center;color:var(--muted);padding:48px 0;font-size:14px;grid-column:1/-1;}
 .no-orders i{font-size:40px;display:block;margin:0 auto 10px;line-height:1;}
 
-.toast{background:#1a1a2e;color:#fff;padding:10px 20px;border-radius:10px;font-size:13px;font-weight:500;opacity:0;pointer-events:none;transition:opacity .3s;margin:0 auto;width:fit-content;max-width:90%;margin-top:6px;text-align:center;font-family:var(--font-sans);}
-.toast.show{opacity:1;}
+/* descuento */
+.discount-section{display:flex;align-items:center;gap:12px;margin-top:16px;padding:12px 0;border-top:0.5px solid var(--border);flex-wrap:wrap;}
+.discount-section label{font-size:13px;font-weight:600;color:var(--muted);}
+.discount-section input{flex:1;min-width:120px;height:38px;border-radius:8px;border:0.5px solid var(--inp-b);background:var(--inp);color:var(--text);padding:0 12px;font-size:14px;outline:none;}
+.discount-section input:focus{border-color:var(--blue);}
+.discount-section .disc-btn{height:38px;padding:0 16px;border-radius:8px;border:none;font-weight:600;cursor:pointer;transition:.15s;font-size:13px;}
+.disc-apply{background:var(--blue);color:#fff;}
+.disc-apply:hover{background:var(--blue2);}
+.disc-remove{background:var(--pink-bg);color:var(--pink-t);}
+.disc-remove:hover{background:rgba(224,85,128,0.25);}
+.discount-status{font-size:13px;font-weight:500;color:var(--green-t);margin-left:4px;}
 
-/* COMPONENTE DE ALERTA TOTALMENTE ADAPTATIVO AL TEMA CLARO / OSCURO */
-.alert-overlay {
-  position: fixed;top:0;left:0;width:100%;height:100%;
-  background: var(--overlay);backdrop-filter: blur(4px);
-  display: flex;align-items: center;justify-content: center;
-  z-index: 9999;opacity: 0;pointer-events: none;
-  transition: opacity 0.2s ease, background 0.25s ease;
-  font-family: var(--font-sans);
-}
-.alert-overlay.show { opacity: 1; pointer-events: auto; }
-.alert-modal {
-  background: var(--card);border: 1px solid var(--border);
-  border-radius: 16px;padding: 24px;width: 90%;max-width: 400px;
-  box-shadow: 0 10px 25px rgba(0,0,0,0.3);text-align: center;
-  transform: scale(0.9);transition: transform 0.2s ease, background 0.25s ease, border-color 0.25s ease;
-}
-.alert-overlay.show .alert-modal { transform: scale(1); }
-.alert-icon {
-  width: 52px;height: 52px;background: rgba(224,85,128,0.14);
-  color: var(--pink);border-radius: 50%;display: flex;
-  align-items: center;justify-content: center;margin: 0 auto 16px;
-  font-size: 26px;transition: background 0.25s ease;
-}
-.alert-title { font-size: 18px; font-weight: 700; color: var(--text); margin-bottom: 8px; transition: color 0.25s ease; }
-.alert-msg { font-size: 14px; color: var(--muted); line-height: 1.5; margin-bottom: 20px; transition: color 0.25s ease; }
-.alert-btn {
-  background: var(--blue); color: #fff; border: none; border-radius: 8px;
-  padding: 10px 24px; font-size: 14px; font-weight: 600; cursor: pointer;
-  transition: background 0.15s ease; width: 100%; font-family: var(--font-sans);
-}
-.alert-btn:hover { background: var(--blue2); }
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);z-index:10000;background:#1a1a2e;color:#fff;padding:10px 20px;border-radius:10px;font-size:13px;font-weight:500;opacity:0;pointer-events:none;text-align:center;font-family:var(--font-sans);box-shadow:0 4px 12px rgba(0,0,0,0.3);display:block;}
 
-@media(max-height:800px){
-  .navbar{height:56px;}
-  .setup-icon{width:56px;height:56px;}
-  .setup-icon i{font-size:28px;}
-  .setup-hero h1{font-size:24px;}
-  .card{padding:18px 20px;}
-  .pg-setup{padding:0;}
-}
+/* ALERT OVERLAY */
+.alert-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:var(--overlay);backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;z-index:9999;opacity:0;pointer-events:none;transition:opacity .2s ease,background .25s ease;font-family:var(--font-sans);}
+.alert-overlay.show{opacity:1;pointer-events:auto;}
+.alert-modal{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:24px;width:90%;max-width:400px;box-shadow:0 10px 25px rgba(0,0,0,0.3);text-align:center;transform:scale(0.9);transition:transform .2s ease,background .25s ease,border-color .25s ease;}
+.alert-overlay.show .alert-modal{transform:scale(1);}
+.alert-icon{width:52px;height:52px;background:rgba(224,85,128,0.14);color:var(--pink);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;font-size:26px;transition:background .25s ease;}
+.alert-title{font-size:18px;font-weight:700;color:var(--text);margin-bottom:8px;transition:color .25s ease;}
+.alert-msg{font-size:14px;color:var(--muted);line-height:1.5;margin-bottom:20px;transition:color .25s ease;}
+.alert-btn{background:var(--blue);color:#fff;border:none;border-radius:8px;padding:10px 24px;font-size:14px;font-weight:600;cursor:pointer;transition:background .15s ease;width:100%;font-family:var(--font-sans);}
+.alert-btn:hover{background:var(--blue2);}
 
-@media(max-width:800px){
-  .order-layout{grid-template-columns:1fr;}
-  .orders-grid{grid-template-columns:1fr;}
-}
-/* Corrección en Customer.css para evitar espacios raros abajo */
-.toast {
-  position: fixed;
-  bottom: 24px;
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: 10000;
-  background: #1a1a2e;
-  color: #fff;
-  padding: 10px 20px;
-  border-radius: 10px;
-  font-size: 13px;
-  font-weight: 500;
-  opacity: 0;
-  pointer-events: none;
-  text-align: center;
-  font-family: var(--font-sans);
-  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-  display: block; /* Solo se manipula la opacidad/escala con GSAP */
-}
-/* AGREGAR AL FINAL DE CUSTOMER.CSS */
+/* emojis de fondo */
+#pg-setup{position:relative;overflow:hidden;}
+.contenedor-emojis-fondo{position:absolute;top:0;left:0;width:100%;height:100%;z-index:0;pointer-events:none;}
+.pg-setup>div:first-child{position:relative;z-index:1;}
+.emoji-flotante{position:absolute;user-select:none;}
+.e-lejos-1{top:15%;left:10%;font-size:1.8rem;opacity:0.12;animation:girarFlotar 16s linear infinite alternate;}
+.e-lejos-2{top:75%;left:12%;font-size:2rem;opacity:0.15;animation:girarFlotar 20s linear infinite alternate-reverse;}
+.e-lejos-3{top:80%;right:10%;font-size:1.9rem;opacity:0.12;animation:girarFlotar 18s linear infinite alternate;}
+.e-cerca-1{top:25%;right:18%;font-size:3.5rem;opacity:0.45;animation:girarFlotar 10s linear infinite alternate;}
+.e-cerca-2{top:50%;left:22%;font-size:3rem;opacity:0.4;animation:girarFlotar 12s linear infinite alternate-reverse;}
+.e-cerca-3{bottom:25%;right:20%;font-size:3.8rem;opacity:0.5;animation:girarFlotar 9s linear infinite alternate;}
+@keyframes girarFlotar{0%{transform:translateY(0) rotate(0deg) scale(1);}50%{transform:translateY(-15px) rotate(180deg) scale(1.05);}100%{transform:translateY(0) rotate(360deg) scale(1);}}
 
-#pg-setup {
-  position: relative;
-  overflow: hidden;
-}
+.primary-btn, .add-btn, .action-btn{gap:10px !important;}
 
-.contenedor-emojis-fondo {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  z-index: 0;
-  pointer-events: none;
-}
+/* VIEJO OESTE */
+.wild-west-container{position:relative;width:100%;height:250px;background:linear-gradient(to bottom,rgba(26,111,212,0.01),rgba(210,180,140,0.06));overflow:hidden;margin-bottom:10px;border-bottom:2px dashed rgba(26,111,212,0.15);}
+.tumbleweed{position:absolute;width:35px;height:35px;border-radius:50%;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='46' stroke='%23d2b48c' stroke-width='2' fill='none' opacity='0.4'/%3E%3Cpath d='M50 90 C30 80 20 60 30 40 C40 20 60 20 70 40 C80 60 70 80 50 90 Z' stroke='%23cda87c' stroke-width='2.5' fill='none'/%3E%3Cpath d='M20 50 C20 30 40 15 60 25 C80 35 85 60 65 75 C45 90 20 75 20 50 Z' stroke='%23d2b48c' stroke-width='2' fill='none'/%3E%3Cpath d='M35 25 C50 10 75 25 70 45 C65 65 40 80 25 60 C10 40 20 25 35 25 Z' stroke='%23be9665' stroke-width='1.8' fill='none'/%3E%3Cpath d='M50 5 C70 20 80 50 65 70 M50 95 C25 80 15 50 35 30 M5 50 C20 70 50 80 70 60 M95 50 C75 20 45 15 30 40' stroke='%23d2b48c' stroke-width='1.5' fill='none'/%3E%3C/svg%3E");background-size:contain;background-repeat:no-repeat;background-position:center;filter:drop-shadow(0 3px 4px rgba(0,0,0,0.15));bottom:20px;left:50px;user-select:none;z-index:2;}
+.desert-cactus{position:absolute;bottom:18px;font-size:38px;opacity:0.75;filter:drop-shadow(0 2px 4px rgba(0,0,0,0.08));user-select:none;z-index:1;}
+.cactus-1{left:20%;font-size:42px;opacity:0.6;}
+.cactus-2{left:55%;font-size:35px;opacity:0.5;}
+.cactus-3{right:15%;font-size:46px;opacity:0.75;}
+.desert-sand{position:absolute;bottom:0;left:0;width:100%;height:20px;background:linear-gradient(to top,rgba(210,180,140,0.5),transparent);border-radius:4px;z-index:3;}
+.west-text{font-family:'Courier New',Courier,monospace;font-size:13px;color:var(--muted);margin-top:5px;font-style:italic;font-weight:600;letter-spacing:.5px;}
 
-.pg-setup > div:first-child {
-  position: relative;
-  z-index: 1; /* Mantiene el formulario por encima de los emojis */
-}
+/* LLUVIA DE DINERO */
+.money-rain-container{position:fixed;top:0;left:0;width:100vw;height:100vh;pointer-events:none;z-index:99999;overflow:hidden;}
+.money-emoji{position:absolute;font-size:28px;user-select:none;will-change:transform,opacity;}
 
-.emoji-flotante {
-  position: absolute;
-  user-select: none;
-}
-
-/* === EMOJIS MÁS LEJOS DEL CENTRO (Más desvanecidos, pequeños y lentos) === */
-.e-lejos-1 {
-  top: 15%; left: 10%; font-size: 1.8rem; opacity: 0.12;
-  animation: girarFlotar 16s linear infinite alternate;
-}
-.e-lejos-2 {
-  top: 75%; left: 12%; font-size: 2rem; opacity: 0.15;
-  animation: girarFlotar 20s linear infinite alternate-reverse;
-}
-.e-lejos-3 {
-  top: 80%; right: 10%; font-size: 1.9rem; opacity: 0.12;
-  animation: girarFlotar 18s linear infinite alternate;
-}
-
-/* === EMOJIS MÁS CERCANOS AL CONTENEDOR (Más visibles, grandes y dinámicos) === */
-.e-cerca-1 {
-  top: 25%; right: 18%; font-size: 3.5rem; opacity: 0.45;
-  animation: girarFlotar 10s linear infinite alternate;
-}
-.e-cerca-2 {
-  top: 50%; left: 22%; font-size: 3rem; opacity: 0.4;
-  animation: girarFlotar 12s linear infinite alternate-reverse;
-}
-.e-cerca-3 {
-  bottom: 25%; right: 20%; font-size: 3.8rem; opacity: 0.5;
-  animation: girarFlotar 9s linear infinite alternate;
-}
-
-@keyframes girarFlotar {
-  0% {
-    transform: translateY(0) rotate(0deg) scale(1);
-  }
-  50% {
-    transform: translateY(-15px) rotate(180deg) scale(1.05);
-  }
-  100% {
-    transform: translateY(0) rotate(360deg) scale(1);
-  }
-}
-
-/* Ajuste visual para botones con texto y emojis */
-.primary-btn, .add-btn, .action-btn {
-  gap: 10px !important;
-}
-
-/* 2. ARREGLAR SCROLL INNECESARIO EN NEW ORDER */
-/* Modifica la clase .page para asegurar que contenga el flujo correctamente */
-.page {
-  display: none;
-  padding: 24px;
-  overflow-y: auto;
-  flex: 1;
-  height: 100%; /* Limita la altura al contenedor padre */
-}
-
-/* Ajusta el layout de las órdenes para que no fuerce un desbordamiento vertical artificial */
-.order-layout {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 20px;
-  align-items: start;
-  height: auto; /* Cambiado de 100% a auto para evitar estiramientos e innecesario scroll */
-}
-
-/* --- ANIMACIÓN VIEJO OESTE REALISTA CON SVG VECTORIAL Y TAMAÑO REDUCIDO --- */
-.wild-west-container {
-  position: relative;
-  width: 100%;
-  height: 250px;
-  background: linear-gradient(to bottom, rgba(26, 111, 212, 0.01), rgba(210, 180, 140, 0.06));
-  overflow: hidden;
-  margin-bottom: 10px;
-  border-bottom: 2px dashed rgba(26, 111, 212, 0.15);
-}
-
-/* Plantitas rodantes compactas basadas en la imagen de referencia */
-.tumbleweed {
-  position: absolute;
-  width: 35px; /* Más pequeñas como solicitaste */
-  height: 35px;
-  border-radius: 50%;
-  /* SVG que dibuja ramitas entrelazadas en color paja/arena (#d2b48c y #cda87c) */
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='46' stroke='%23d2b48c' stroke-width='2' fill='none' opacity='0.4'/%3E%3Cpath d='M50 90 C30 80 20 60 30 40 C40 20 60 20 70 40 C80 60 70 80 50 90 Z' stroke='%23cda87c' stroke-width='2.5' fill='none'/%3E%3Cpath d='M20 50 C20 30 40 15 60 25 C80 35 85 60 65 75 C45 90 20 75 20 50 Z' stroke='%23d2b48c' stroke-width='2' fill='none'/%3E%3Cpath d='M35 25 C50 10 75 25 70 45 C65 65 40 80 25 60 C10 40 20 25 35 25 Z' stroke='%23be9665' stroke-width='1.8' fill='none'/%3E%3Cpath d='M50 5 C70 20 80 50 65 70 M50 95 C25 80 15 50 35 30 M5 50 C20 70 50 80 70 60 M95 50 C75 20 45 15 30 40' stroke='%23d2b48c' stroke-width='1.5' fill='none'/%3E%3C/svg%3E");
-  background-size: contain;
-  background-repeat: no-repeat;
-  background-position: center;
-  filter: drop-shadow(0 3px 4px rgba(0, 0, 0, 0.15));
-  bottom: 20px;
-  left: 50px;
-  user-select: none;
-  z-index: 2;
-}
-
-/* Elementos del entorno: Cactus estáticos */
-.desert-cactus {
-  position: absolute;
-  bottom: 18px;
-  font-size: 38px;
-  opacity: 0.75;
-  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.08));
-  user-select: none;
-  z-index: 1;
-}
-.cactus-1 { left: 20%; font-size: 42px; opacity: 0.6; }
-.cactus-2 { left: 55%; font-size: 35px; opacity: 0.5; }
-.cactus-3 { right: 15%; font-size: 46px; opacity: 0.75; }
-
-/* Suelo de arena */
-.desert-sand {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  width: 100%;
-  height: 20px;
-  background: linear-gradient(to top, rgba(210,180,140,0.5), transparent);
-  border-radius: 4px;
-  z-index: 3;
-}
-
-/* Texto pequeño del viejo oeste */
-.west-text {
-  font-family: 'Courier New', Courier, monospace;
-  font-size: 13px;
-  color: var(--muted);
-  margin-top: 5px;
-  font-style: italic;
-  font-weight: 600;
-  letter-spacing: 0.5px;
-}
-
-/* --- LLUVIA DE DINERO --- */
-.money-rain-container {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100vw;
-  height: 100vh;
-  pointer-events: none;
-  z-index: 99999;
-  overflow: hidden;
-}
-
-.money-emoji {
-  position: absolute;
-  font-size: 28px;
-  user-select: none;
-  will-change: transform, opacity;
-}
+@media(max-height:800px){.navbar{height:56px;}.setup-icon{width:56px;height:56px;}.setup-icon i{font-size:28px;}.setup-hero h1{font-size:24px;}.card{padding:18px 20px;}.pg-setup{padding:0;}}
+@media(max-width:800px){.order-layout{grid-template-columns:1fr;}.orders-grid{grid-template-columns:1fr;}}

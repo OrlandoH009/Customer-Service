@@ -1,4 +1,10 @@
 let isDark=true,products=[],pid=0,orders=[],empName='',compName='',setupComplete=false;
+let appliedDiscountCode=null, discountPercent=0;
+const DISCOUNT_CODES = {
+  'PLEASE': 0.50,
+  'SAVE10': 0.10,
+  'DISCOUNT15': 0.15
+};
 
 function showAlert(title, message) {
   document.getElementById('alert-title').textContent = title;
@@ -13,21 +19,16 @@ function closeAlert() {
 function toggleTheme(){
   isDark = !isDark;
   document.getElementById('app').className = 'wrap ' + (isDark ? '' : 'light');
-  
-  // Nodos de los emojis en la interfaz
   const thEmoji = document.getElementById('th-emoji');
   const setupEmoji = document.getElementById('emoji-setup');
   const orderEmoji = document.getElementById('emoji-order');
   const dashEmoji = document.getElementById('emoji-dash');
-
   if (isDark) {
-    // Emojis para el modo oscuro
     if (thEmoji) thEmoji.textContent = '🌙';
     if (setupEmoji) setupEmoji.textContent = '👨‍💼';
     if (orderEmoji) orderEmoji.textContent = '🛒';
     if (dashEmoji) dashEmoji.textContent = '📈';
   } else {
-    // Emojis para el modo claro
     if (thEmoji) thEmoji.textContent = '☀️';
     if (setupEmoji) setupEmoji.textContent = '👤';
     if (orderEmoji) orderEmoji.textContent = '📝';
@@ -80,7 +81,8 @@ function addProduct(){
     showAlert('Invalid Price', 'The product price must be a valid number greater than 0.');
     return;
   }
-  products.push({id:pid++,name,qty,price});
+  const code = 'P-' + String(pid+1).padStart(3, '0');
+  products.push({id:pid++, name, qty, price, code});
   document.getElementById('np').value='';
   document.getElementById('nq').value='1';
   document.getElementById('npr').value='';
@@ -92,28 +94,88 @@ function removeProduct(id){products=products.filter(p=>p.id!==id);renderTable();
 function updateField(id,f,v){
   const p=products.find(p=>p.id===id);if(!p)return;
   if(f==='q')p.qty=Math.max(1,parseInt(v)||1);
-  if(f==='p')p.price=Math.max(0,parseFloat(v)||0);
+  else if(f==='p')p.price=Math.max(0,parseFloat(v)||0);
+  else if(f==='n')p.name=v.trim() || 'Untitled';
   renderTable();
 }
 
 function renderTable(){
   const tb=document.getElementById('ptbody');
-  if(!products.length){tb.innerHTML='<tr class="empty-r"><td colspan="5">No products added yet</td></tr>';setTotals(0);return;}
+  if(!products.length){tb.innerHTML='<tr class="empty-r"><td colspan="6">No products added yet</td></tr>';setTotals(0);return;}
   let sub=0;
-  tb.innerHTML=products.map(p=>{const s=p.qty*p.price;sub+=s;return`<tr>
-    <td class="cn" style="font-weight:500;">${esc(p.name)}</td>
-    <td class="cq"><input class="iinput" type="number" min="1" value="${p.qty}" style="width:46px;" onchange="updateField(${p.id},'q',this.value)"></td>
-    <td class="cp"><input class="iinput" type="number" min="0" step="0.01" value="${p.price.toFixed(2)}" style="width:62px;" onchange="updateField(${p.id},'p',this.value)"></td>
-    <td class="cs">$${s.toFixed(2)}</td>
-    <td class="cd"><button class="del-btn" onclick="removeProduct(${p.id})" aria-label="Remove">❌ Remove</button></td>
-  </tr>`;}).join('');
+  tb.innerHTML=products.map(p=>{
+    const s=p.qty*p.price;
+    sub+=s;
+    return `<tr>
+      <td class="cn"><input class="iinput" type="text" value="${esc(p.name)}" onchange="updateField(${p.id},'n',this.value)" style="width:100%;"></td>
+      <td class="cc" style="font-size:12px;color:var(--muted);">${p.code}</td>
+      <td class="cq"><input class="iinput" type="number" min="1" value="${p.qty}" style="width:46px;" onchange="updateField(${p.id},'q',this.value)"></td>
+      <td class="cp"><input class="iinput" type="number" min="0" step="0.01" value="${p.price.toFixed(2)}" style="width:62px;" onchange="updateField(${p.id},'p',this.value)"></td>
+      <td class="cs">$${s.toFixed(2)}</td>
+      <td class="cd"><button class="del-btn" onclick="removeProduct(${p.id})" aria-label="Remove">❌ Remove</button></td>
+    </tr>`;
+  }).join('');
   setTotals(sub);
 }
 
 function setTotals(net){
-  document.getElementById('t-net').textContent='$'+net.toFixed(2);
-  document.getElementById('t-tax').textContent='$'+(net*.13).toFixed(2);
-  document.getElementById('t-gross').textContent='$'+(net*1.13).toFixed(2);
+  const discount = discountPercent || 0;
+  const discountAmount = net * discount;
+  const discountedNet = net - discountAmount;
+  const tax = discountedNet * 0.13;
+  const gross = discountedNet + tax;
+
+  document.getElementById('t-net').textContent = '$' + net.toFixed(2);
+  document.getElementById('t-tax').textContent = '$' + tax.toFixed(2);
+  document.getElementById('t-gross').textContent = '$' + gross.toFixed(2);
+
+  const discountLine = document.getElementById('discount-line');
+  const discountLabel = document.getElementById('discount-label');
+  const discountAmountSpan = document.getElementById('discount-amount');
+
+  if (discount > 0 && net > 0) {
+    discountLine.style.display = 'flex';
+    discountLabel.textContent = (discount * 100).toFixed(0) + '%';
+    discountAmountSpan.textContent = '-$' + discountAmount.toFixed(2);
+  } else {
+    discountLine.style.display = 'none';
+  }
+}
+
+function applyDiscount(){
+  const input = document.getElementById('discount-input');
+  const code = input.value.trim().toUpperCase();
+  if (!code) {
+    showAlert('Empty Code', 'Please enter a discount code.');
+    return;
+  }
+  if (appliedDiscountCode === code) {
+    showAlert('Already Applied', 'This discount code is already active.');
+    return;
+  }
+  const percent = DISCOUNT_CODES[code];
+  if (percent === undefined) {
+    showAlert('Invalid Code', 'The discount code entered is not valid. Try: PLEASE, SAVE10, DISCOUNT15');
+    return;
+  }
+  appliedDiscountCode = code;
+  discountPercent = percent;
+  document.getElementById('discount-status').textContent = '✅ ' + code + ' (' + (percent*100).toFixed(0) + '%)';
+  document.getElementById('discount-input').value = '';
+  // Recalcular totales
+  const net = products.reduce((s,p) => s + p.qty * p.price, 0);
+  setTotals(net);
+  showToast('🎉 Discount applied: ' + code);
+}
+
+function removeDiscount(){
+  appliedDiscountCode = null;
+  discountPercent = 0;
+  document.getElementById('discount-status').textContent = '';
+  document.getElementById('discount-input').value = '';
+  const net = products.reduce((s,p) => s + p.qty * p.price, 0);
+  setTotals(net);
+  showToast('✕ Discount removed');
 }
 
 function generateOrder(){
@@ -157,26 +219,33 @@ function generateOrder(){
   }
   
   const net=products.reduce((s,p)=>s+p.qty*p.price,0);
+  const discountAmount = net * discountPercent;
+  const discountedNet = net - discountAmount;
+  const tax = discountedNet * 0.13;
+  const gross = discountedNet + tax;
+  
   const now=new Date();
   const oid='ORD-'+String(orders.length+1).padStart(3,'0');
   orders.push({
     id:oid,customer:{name,email,phone,addr},employee:empName,company:compName,
-    products:[...products],net,tax:net*.13,gross:net*1.13,status:'pending',payment,
+    products:[...products],net,tax,gross,status:'pending',payment,
+    discountCode: appliedDiscountCode || null,
+    discountPercent: discountPercent || 0,
+    discountAmount: discountAmount || 0,
     date:now.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})
   });
   products=[];pid=0;
   ['c-name','c-email','c-phone','c-addr','cash-amount','card-number'].forEach(x=>document.getElementById(x).value='');
   document.getElementById('payment-method').value='cash';
   togglePaymentFields();
+  // Resetear descuento
+  removeDiscount(); // limpia el descuento y el status
   renderTable();
   showToast('✓ '+oid+' created!');
-  // ¡DISPARAR LLUVIA DE DINERO JUSTO AQUÍ!
   triggerMoneyRain();
   setTimeout(()=>goTo('dash'),800);
 }
 
-
-// FINALIZAR UNA ORDEN
 function finishOrder(oid){
   const o=orders.find(x=>x.id===oid);
   if(!o) return;
@@ -189,7 +258,6 @@ function finishOrder(oid){
   renderDash();
 }
 
-// ELIMINAR UNA ORDEN DEFINITIVAMENTE
 function deleteOrder(oid){
   orders=orders.filter(x=>x.id!==oid);
   showToast('✕ Order deleted successfully');
@@ -204,17 +272,13 @@ function renderDash(){
   document.getElementById('m-total').textContent='$'+tot.toFixed(2);
   const g=document.getElementById('orders-grid');
   
-// SI NO HAY ÓRDENES: Inyectamos el viejo oeste dinámico con el nuevo arte realista
   if(!orders.length){
     g.innerHTML=`
       <div class="no-orders">
         <div class="wild-west-container" id="west-stage">
-          <!-- Decoración: Cactus del desierto -->
           <div class="desert-cactus cactus-1">🌵</div>
           <div class="desert-cactus cactus-2">🌵</div>
           <div class="desert-cactus cactus-3">🌵</div>
-          
-          <!-- Arbustos compactos con texturas de ramas vectoriales -->
           <div class="tumbleweed" id="weed1"></div>
           <div class="tumbleweed" id="weed2"></div>
           <div class="desert-sand"></div>
@@ -222,13 +286,15 @@ function renderDash(){
         <div class="west-text">"I don't see the green ones over here"</div>
       </div>
     `;
-    // Encendemos las físicas adaptadas a la nueva escala compacta
     initTumbleweeds();
     return;
   }
   
-  // Si hay órdenes, renderiza normal...
-  g.innerHTML=orders.slice().reverse().map(o=>`
+  g.innerHTML=orders.slice().reverse().map(o=>{
+    const discountInfo = (o.discountCode && o.discountPercent > 0) ?
+      `Discount: ${o.discountCode} (${(o.discountPercent*100).toFixed(0)}%) -$${o.discountAmount.toFixed(2)}` :
+      '';
+    return `
     <div class="ocard">
       <div class="ocard-top">
         <div><div class="o-id">${o.id} · ${o.date}</div><div class="o-name">${esc(o.customer.name)}</div></div>
@@ -239,6 +305,7 @@ function renderDash(){
         <span><i class="ti ti-phone" aria-hidden="true"></i>${esc(o.customer.phone)}</span>
         <span><i class="ti ti-map-pin" aria-hidden="true"></i>${esc(o.customer.addr)}</span>
         <span><i class="ti ti-credit-card" aria-hidden="true"></i>${o.payment.method==='cash' ? 'Cash · $'+o.payment.cashAmount.toFixed(2) : 'Card · •••• '+String(o.payment.cardNumber).slice(-4)}</span>
+        ${discountInfo ? `<span><i class="ti ti-tag" aria-hidden="true"></i>${discountInfo}</span>` : ''}
       </div>
       <div class="o-chips">${o.products.map(p=>`<span class="o-chip">${esc(p.name)} ×${p.qty}</span>`).join('')}</div>
       <div class="o-footer">
@@ -250,7 +317,7 @@ function renderDash(){
         </div>
       </div>
     </div>
-  `).join('');
+  `}).join('');
 }
 
 function exportPDF(oid){
@@ -258,12 +325,20 @@ function exportPDF(oid){
   
   const rows=o.products.map(p=>`
     <tr>
-      <td style="font-weight: 500; color: #1e293b;">${esc(p.name)}</td>
-      <td style="text-align: center; color: #475569;">${p.qty}</td>
-      <td style="text-align: right; color: #475569;">$${p.price.toFixed(2)}</td>
-      <td style="text-align: right; font-weight: 600; color: #0f172a;">$${(p.qty*p.price).toFixed(2)}</td>
+      <td style="font-weight:500;color:#1e293b;">${esc(p.name)} <span style="color:#94a3b8;font-size:11px;">(${p.code})</span></td>
+      <td style="text-align:center;color:#475569;">${p.qty}</td>
+      <td style="text-align:right;color:#475569;">$${p.price.toFixed(2)}</td>
+      <td style="text-align:right;font-weight:600;color:#0f172a;">$${(p.qty*p.price).toFixed(2)}</td>
     </tr>
   `).join('');
+
+  // Línea de descuento en PDF
+  const discountRow = (o.discountCode && o.discountPercent > 0) ? `
+    <tr>
+      <td colspan="3" style="text-align:right;font-weight:500;color:#e05580;">Descuento (${o.discountCode} - ${(o.discountPercent*100).toFixed(0)}%)</td>
+      <td style="text-align:right;font-weight:600;color:#e05580;">-$${o.discountAmount.toFixed(2)}</td>
+    </tr>
+  ` : '';
 
   const html=`<!DOCTYPE html>
   <html>
@@ -271,88 +346,62 @@ function exportPDF(oid){
     <meta charset="utf-8">
     <title>Comprobante ${o.id}</title>
     <style>
-      @page {
-        size: A4;
-        margin: 0; /* Dejamos el margen en 0 para controlarlo perfectamente por CSS */
-      }
+      @page { size: A4; margin: 0; }
       *, *::before, *::after { box-sizing: border-box; }
-      
-      /* Contenedor principal para alejar todo de las orillas de la hoja */
-      .page-wrapper {
-        padding: 28mm 24mm; /* Más separación arriba/abajo y generosa a los lados */
-        width: 100%;
-        min-height: 100vh;
-        background: #ffffff;
-      }
-      
-      body {
-        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-        margin: 0; padding: 0; color: #1e293b; font-size: 13px; line-height: 1.5;
-      }
-      
-      /* Encabezado */
-      .header-table { width: 100%; border-collapse: collapse; margin-bottom: 35px; }
-      .brand-title { font-size: 28px; font-weight: 800; color: #1a6fd4; letter-spacing: -0.5px; margin: 0; }
-      .brand-subtitle { font-size: 12px; color: #64748b; margin-top: 4px; }
-      .invoice-title { font-size: 20px; font-weight: 700; color: #0f172a; text-align: right; margin: 0; letter-spacing: 0.5px; }
-      .invoice-id { font-size: 14px; font-weight: 700; color: #e05580; text-align: right; margin-top: 4px; }
-      
-      /* Bloques de Información */
-      .info-table { width: 100%; border-collapse: collapse; margin-bottom: 40px; }
-      .info-cell { width: 50%; vertical-align: top; }
-      .info-box { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 18px 20px; margin-right: 12px; }
-      .info-box.right { margin-right: 0; margin-left: 12px; }
-      .sec-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; color: #1a6fd4; margin: 0 0 12px 0; border-bottom: 1px solid #e2e8f0; padding-bottom: 6px; }
-      .info-row { margin-bottom: 6px; font-size: 13px; }
-      .info-lbl { color: #64748b; font-weight: 500; display: inline-block; width: 85px; }
-      .info-val { color: #1e293b; font-weight: 600; }
-      
-      /* Tabla de Productos */
-      .items-table { width: 100%; border-collapse: collapse; margin-bottom: 30px; }
-      .items-table th { background: #0f172a; color: #ffffff; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; padding: 12px 14px; text-align: left; }
-      .items-table th:first-child { border-top-left-radius: 6px; border-bottom-left-radius: 6px; }
-      .items-table th:last-child { border-top-right-radius: 6px; border-bottom-right-radius: 6px; text-align: right; }
-      .items-table td { padding: 12px 14px; border-bottom: 1px solid #e2e8f0; vertical-align: middle; }
-      
-      /* Totales */
-      .summary-table { width: 260px; margin-left: auto; border-collapse: collapse; margin-top: 20px; }
-      .summary-table td { padding: 6px 10px; font-size: 13px; color: #475569; }
-      .summary-table .lbl { text-align: right; font-weight: 500; }
-      .summary-table .val { text-align: right; font-weight: 600; width: 110px; color: #1e293b; }
-      .summary-table tr.total-row td { font-size: 16px; font-weight: 700; color: #1a6fd4; border-top: 2px solid #1a6fd4; padding-top: 10px; }
-      
-      /* Pie de Página */
-      .footer { border-top: 1px solid #e2e8f0; padding-top: 15px; margin-top: 60px; text-align: center; font-size: 11px; color: #94a3b8; font-weight: 500; }
+      .page-wrapper { padding: 28mm 24mm; width:100%; min-height:100vh; background:#ffffff; }
+      body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; margin:0; padding:0; color:#1e293b; font-size:13px; line-height:1.5; }
+      .header-table { width:100%; border-collapse:collapse; margin-bottom:35px; }
+      .brand-title { font-size:28px; font-weight:800; color:#1a6fd4; letter-spacing:-0.5px; margin:0; }
+      .brand-subtitle { font-size:12px; color:#64748b; margin-top:4px; }
+      .invoice-title { font-size:20px; font-weight:700; color:#0f172a; text-align:right; margin:0; letter-spacing:0.5px; }
+      .invoice-id { font-size:14px; font-weight:700; color:#e05580; text-align:right; margin-top:4px; }
+      .info-table { width:100%; border-collapse:collapse; margin-bottom:40px; }
+      .info-cell { width:50%; vertical-align:top; }
+      .info-box { background:#f8fafc; border:1px solid #e2e8f0; border-radius:10px; padding:18px 20px; margin-right:12px; }
+      .info-box.right { margin-right:0; margin-left:12px; }
+      .sec-title { font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.8px; color:#1a6fd4; margin:0 0 12px 0; border-bottom:1px solid #e2e8f0; padding-bottom:6px; }
+      .info-row { margin-bottom:6px; font-size:13px; }
+      .info-lbl { color:#64748b; font-weight:500; display:inline-block; width:85px; }
+      .info-val { color:#1e293b; font-weight:600; }
+      .items-table { width:100%; border-collapse:collapse; margin-bottom:30px; }
+      .items-table th { background:#0f172a; color:#ffffff; font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.5px; padding:12px 14px; text-align:left; }
+      .items-table th:first-child { border-top-left-radius:6px; border-bottom-left-radius:6px; }
+      .items-table th:last-child { border-top-right-radius:6px; border-bottom-right-radius:6px; text-align:right; }
+      .items-table td { padding:12px 14px; border-bottom:1px solid #e2e8f0; vertical-align:middle; }
+      .summary-table { width:260px; margin-left:auto; border-collapse:collapse; margin-top:20px; }
+      .summary-table td { padding:6px 10px; font-size:13px; color:#475569; }
+      .summary-table .lbl { text-align:right; font-weight:500; }
+      .summary-table .val { text-align:right; font-weight:600; width:110px; color:#1e293b; }
+      .summary-table tr.total-row td { font-size:16px; font-weight:700; color:#1a6fd4; border-top:2px solid #1a6fd4; padding-top:10px; }
+      .summary-table tr.discount-row td { color:#e05580; font-weight:500; }
+      .footer { border-top:1px solid #e2e8f0; padding-top:15px; margin-top:60px; text-align:center; font-size:11px; color:#94a3b8; font-weight:500; }
     </style>
   </head>
   <body>
-    <!-- Envoltura con márgenes reforzados -->
     <div class="page-wrapper">
-
-      <!-- Encabezado Principal -->
       <table class="header-table">
         <tr>
           <td>
             <div class="brand-title">OrderFlow</div>
             <div class="brand-subtitle">Empresa: <strong>${esc(o.company)}</strong> &middot; Agente: <strong>${esc(o.employee)}</strong></div>
           </td>
-          <td style="vertical-align: top;">
+          <td style="vertical-align:top;">
             <div class="invoice-title">COMPROBANTE DE COMPRA</div>
             <div class="invoice-id">${o.id}</div>
           </td>
         </tr>
       </table>
 
-      <!-- Grid de Datos Básicos y del Cliente -->
       <table class="info-table">
         <tr>
           <td class="info-cell">
             <div class="info-box">
               <h2 class="sec-title">Detalles del Pedido</h2>
               <div class="info-row"><span class="info-lbl">Fecha:</span><span class="info-val">${o.date}</span></div>
-              <div class="info-row"><span class="info-lbl">Estado:</span><span class="info-val" style="color:#166534; text-transform:capitalize;">${o.status}</span></div>
+              <div class="info-row"><span class="info-lbl">Estado:</span><span class="info-val" style="color:#166534;text-transform:capitalize;">${o.status}</span></div>
               <div class="info-row"><span class="info-lbl">Método Pago:</span><span class="info-val">${o.payment.method==='cash' ? 'Efectivo' : 'Tarjeta'}</span></div>
               <div class="info-row"><span class="info-lbl">Referencia:</span><span class="info-val">${o.payment.method==='cash' ? '$'+o.payment.cashAmount.toFixed(2) : '•••• '+String(o.payment.cardNumber).slice(-4)}</span></div>
+              ${o.discountCode ? `<div class="info-row"><span class="info-lbl">Descuento:</span><span class="info-val" style="color:#e05580;">${o.discountCode} (${(o.discountPercent*100).toFixed(0)}%) -$${o.discountAmount.toFixed(2)}</span></div>` : ''}
             </div>
           </td>
           <td class="info-cell">
@@ -367,14 +416,13 @@ function exportPDF(oid){
         </tr>
       </table>
 
-      <!-- Tabla de Artículos -->
       <table class="items-table">
         <thead>
           <tr>
-            <th style="width: 50%;">Descripción del Producto</th>
-            <th style="width: 15%; text-align: center;">Cant.</th>
-            <th style="width: 15%; text-align: right;">Precio Unit.</th>
-            <th style="width: 20%; text-align: right;">Subtotal</th>
+            <th style="width:40%;">Descripción</th>
+            <th style="width:15%;text-align:center;">Cant.</th>
+            <th style="width:20%;text-align:right;">Precio Unit.</th>
+            <th style="width:25%;text-align:right;">Subtotal</th>
           </tr>
         </thead>
         <tbody>
@@ -382,27 +430,16 @@ function exportPDF(oid){
         </tbody>
       </table>
 
-      <!-- Desglose de Totales Financieros -->
       <table class="summary-table">
-        <tr>
-          <td class="lbl">Subtotal neto</td>
-          <td class="val">$${o.net.toFixed(2)}</td>
-        </tr>
-        <tr>
-          <td class="lbl">IVA / Impuestos (13%)</td>
-          <td class="val">$${o.tax.toFixed(2)}</td>
-        </tr>
-        <tr class="total-row">
-          <td class="lbl">Total a Pagar</td>
-          <td class="val">$${o.gross.toFixed(2)}</td>
-        </tr>
+        <tr><td class="lbl">Subtotal neto</td><td class="val">$${o.net.toFixed(2)}</td></tr>
+        ${discountRow}
+        <tr><td class="lbl">IVA / Impuestos (13%)</td><td class="val">$${o.tax.toFixed(2)}</td></tr>
+        <tr class="total-row"><td class="lbl">Total a Pagar</td><td class="val">$${o.gross.toFixed(2)}</td></tr>
       </table>
 
-      <!-- Pie de Página Fijo -->
       <div class="footer">
         Documento electrónico emitido por OrderFlow &middot; ¡Gracias por su confianza y preferencia!
       </div>
-
     </div>
   </body>
   </html>`;
@@ -426,112 +463,58 @@ function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').repl
 
 togglePaymentFields();
 
-//GSAP Animations
-//Hero animation-------
+// GSAP Animations
 window.addEventListener('DOMContentLoaded', () => {
-  gsap.from(".setup-hero", { 
-    duration: 1, 
-    y: 30, 
-    opacity: 0, 
-    ease: "power3.out" 
-  });
-  
-  gsap.from(".pg-setup .card", { 
-    duration: 1, 
-    y: 50, 
-    opacity: 0, 
-    delay: 0.2, 
-    ease: "power3.out" 
-  });
+  gsap.from(".setup-hero", { duration: 1, y: 30, opacity: 0, ease: "power3.out" });
+  gsap.from(".pg-setup .card", { duration: 1, y: 50, opacity: 0, delay: 0.2, ease: "power3.out" });
 });
 
-//Navigation animation-------
 function goTo(p){
   if((p==='order'||p==='dash')&&!setupComplete){
     showAlert('Navigation Restricted', 'Please complete the profile Setup first before exploring other sections.');
     return;
   }
-  
   ['setup','order','dash'].forEach(x=>{
     document.getElementById('pg-'+x).classList.remove('active');
     document.getElementById('nl-'+x).classList.remove('active');
   });
-  
   const nextPage = document.getElementById('pg-'+p);
   nextPage.classList.add('active');
   document.getElementById('nl-'+p).classList.add('active');
-  
-  gsap.fromTo(nextPage, 
-    { opacity: 0, x: 20 }, 
-    { duration: 0.4, opacity: 1, x: 0, ease: "power2.out" }
-  );
-
+  gsap.fromTo(nextPage, { opacity: 0, x: 20 }, { duration: 0.4, opacity: 1, x: 0, ease: "power2.out" });
   if(p==='dash') renderDash();
 }
 
-//Animation for toast notifications
 function showToast(msg){
   const t = document.getElementById('toast');
   t.textContent = msg;
-  
-  // Reseteamos el estado con GSAP y lo hacemos visible
-  gsap.killTweensOf(t); // Por si se da click rápido seguidamente
+  gsap.killTweensOf(t);
   t.classList.add('show');
-  
-  // Animación de entrada (Slide down + Fade in)
-  gsap.fromTo(t, 
-    { y: -50, opacity: 0 },
-    { duration: 0.5, y: 0, opacity: 1, ease: "back.out(1.7)" }
-  );
-  
-  // Animación de salida después de 3 segundos
-  gsap.to(t, {
-    delay: 2.7,
-    duration: 0.3,
-    opacity: 0,
-    y: -20,
-    onComplete: () => t.classList.remove('show')
-  });
+  gsap.fromTo(t, { y: 50, opacity: 0, scale: 0.8 }, { duration: 0.4, y: 0, opacity: 1, scale: 1, ease: "back.out(1.5)" });
+  gsap.to(t, { delay: 2.5, duration: 0.3, opacity: 0, y: 20, scale: 0.95, onComplete: () => t.classList.remove('show') });
 }
 
-//Animation for alert modal
 function showAlert(title, message) {
   document.getElementById('alert-title').textContent = title;
   document.getElementById('alert-msg').textContent = message;
-  
   const overlay = document.getElementById('custom-alert');
   const modal = overlay.querySelector('.alert-modal');
-  
   overlay.classList.add('show');
-  
-  // Animamos el fondo negro (fade in)
   gsap.fromTo(overlay, { opacity: 0 }, { duration: 0.2, opacity: 1 });
-  // Animamos el modal interior (de chiquito a grande con rebote)
-  gsap.fromTo(modal, 
-    { scale: 0.7, opacity: 0 }, 
-    { duration: 0.4, scale: 1, opacity: 1, ease: "back.out(1.5)" }
-  );
+  gsap.fromTo(modal, { scale: 0.7, opacity: 0 }, { duration: 0.4, scale: 1, opacity: 1, ease: "back.out(1.5)" });
 }
 
 function closeAlert() {
   const overlay = document.getElementById('custom-alert');
   const modal = overlay.querySelector('.alert-modal');
-  
-  // Animación de salida fluida antes de ocultar el elemento
   gsap.to(modal, { duration: 0.2, scale: 0.8, opacity: 0 });
-  gsap.to(overlay, { 
-    duration: 0.2, 
-    opacity: 0, 
-    onComplete: () => overlay.classList.remove('show') 
-  });
+  gsap.to(overlay, { duration: 0.2, opacity: 0, onComplete: () => overlay.classList.remove('show') });
 }
 
-//Payment animation
 function togglePaymentFields(){
   const method = document.getElementById('payment-method').value;
   const cashField = document.getElementById('cash-amount-field');
   const cardField = document.getElementById('card-number-field');
-  
   if(method === 'cash'){
     cardField.style.display = 'none';
     cashField.style.display = 'flex';
@@ -542,217 +525,97 @@ function togglePaymentFields(){
     gsap.fromTo(cardField, { opacity: 0, y: -10 }, { duration: 0.3, opacity: 1, y: 0 });
   }
 }
-// ==========================================
-// ANIMACIONES CONSTANTES Y MICRO-INTERACCIONES
-// ==========================================
 
+// Animaciones constantes
 window.addEventListener('DOMContentLoaded', () => {
-  // 1. Animación constante (Loop infinito de respiración/flotado en el icono de Setup)
   if (document.querySelector('.setup-icon i')) {
-    gsap.to(".setup-icon i", {
-      y: -6,
-      duration: 1.8,
-      repeat: -1,
-      yoyo: true,
-      ease: "power1.inOut"
-    });
+    gsap.to(".setup-icon i", { y: -6, duration: 1.8, repeat: -1, yoyo: true, ease: "power1.inOut" });
   }
-
-  // 2. Animación de respiración constante al logo de la Navbar (Brand)
-  gsap.to(".nav-brand i", {
-    scale: 1.1,
-    duration: 2,
-    repeat: -1,
-    yoyo: true,
-    ease: "power1.inOut"
-  });
-
-  // 3. Animación constante tipo pulso sutil en los botones primarios activos
-  gsap.to(".primary-btn", {
-    boxShadow: "0 6px 20px rgba(26, 111, 212, 0.4)",
-    duration: 1.5,
-    repeat: -1,
-    yoyo: true,
-    ease: "sine.inOut"
-  });
-  
-  // 4. Animación inicial suave para toda la Navbar al cargar la página
-  gsap.from(".navbar", {
-    y: -20,
-    opacity: 0,
-    duration: 0.8,
-    ease: "power2.out"
-  });
+  gsap.to(".nav-brand i", { scale: 1.1, duration: 2, repeat: -1, yoyo: true, ease: "power1.inOut" });
+  gsap.to(".primary-btn", { boxShadow: "0 6px 20px rgba(26,111,212,0.4)", duration: 1.5, repeat: -1, yoyo: true, ease: "sine.inOut" });
+  gsap.from(".navbar", { y: -20, opacity: 0, duration: 0.8, ease: "power2.out" });
 });
 
 function goTo(p){
-  // 1. Validar si el usuario completó el Setup
   if((p==='order'||p==='dash')&&!setupComplete){
     showAlert('Navigation Restricted', 'Please complete the profile Setup first before exploring other sections.');
     return;
   }
-  
-  // 2. Remover clases activas de todas las páginas y enlaces de navegación
   ['setup','order','dash'].forEach(x=>{
     document.getElementById('pg-'+x).classList.remove('active');
     document.getElementById('nl-'+x).classList.remove('active');
   });
-  
-  // 3. Activar la página seleccionada
   const nextPage = document.getElementById('pg-'+p);
   nextPage.classList.add('active');
   document.getElementById('nl-'+p).classList.add('active');
-  
-  // 4. Animación constante de entrada con GSAP (Fade In + Desplazamiento sutil)
-  gsap.fromTo(nextPage, 
-    { opacity: 0, x: 15 }, 
-    { duration: 0.4, opacity: 1, x: 0, ease: "power2.out" }
-  );
-
-  // 5. Animación en cascada opcional para los elementos internos de la pestaña activa
+  gsap.fromTo(nextPage, { opacity: 0, x: 15 }, { duration: 0.4, opacity: 1, x: 0, ease: "power2.out" });
   gsap.from(nextPage.querySelectorAll('.field, .card, .mcard'), {
     duration: 0.4,
     y: 15,
     opacity: 0,
     stagger: 0.05,
     ease: "power3.out",
-    clearProps: "all" // Limpia las propiedades para que no afecte estilos CSS nativos
+    clearProps: "all"
   });
-
-  // 6. Si es el dashboard, renderizar los datos
   if(p==='dash') renderDash();
-} 
-
-// Actualización en el Toast (Controlado 100% por GSAP, invisible al iniciar)
-function showToast(msg){
-  const t = document.getElementById('toast');
-  t.textContent = msg;
-  
-  gsap.killTweensOf(t);
-  t.classList.add('show');
-  
-  // Entra flotando de abajo hacia arriba en su eje fijo sin romper layouts
-  gsap.fromTo(t, 
-    { y: 50, opacity: 0, scale: 0.8 },
-    { duration: 0.4, y: 0, opacity: 1, scale: 1, ease: "back.out(1.5)" }
-  );
-  
-  // Se desvanece suavemente al terminar
-  gsap.to(t, {
-    delay: 2.5,
-    duration: 0.3,
-    opacity: 0,
-    y: 20,
-    scale: 0.95,
-    onComplete: () => t.classList.remove('show')
-  });
 }
 
-// --- LÓGICA DE FÍSICAS REBOTANTES ADAPTADAS A TAMAÑO REDUCIDO Y LENTO ---
+// Tumbleweeds
 function initTumbleweeds() {
   const stage = document.getElementById('west-stage');
   const w1 = document.getElementById('weed1');
   const w2 = document.getElementById('weed2');
   if(!stage || !w1 || !w2) return;
-
   const stageW = stage.clientWidth;
-  
-  // Tamaño cambiado a 35 para hacer match perfecto con el CSS reducido
   let pos1 = { x: stageW * 0.15, y: 0, vx: 1.1, size: 35 };
   let pos2 = { x: stageW * 0.75, y: 0, vx: -0.9, size: 35 };
-
   gsap.ticker.remove(updateLoop);
-
   function updateLoop() {
-    if (!document.getElementById('west-stage')) {
-      gsap.ticker.remove(updateLoop);
-      return;
-    }
-
+    if (!document.getElementById('west-stage')) { gsap.ticker.remove(updateLoop); return; }
     const currentWidth = stage.clientWidth;
-
     pos1.x += pos1.vx;
     pos2.x += pos2.vx;
-
-    // Saltos orgánicos pausados y proporcionales a su tamaño
     pos1.y = Math.abs(Math.sin(pos1.x * 0.025)) * 16;
     pos2.y = Math.abs(Math.sin(pos2.x * 0.022)) * 14;
-
     if (pos1.x <= 0) { pos1.x = 0; pos1.vx *= -1; }
     if (pos1.x >= currentWidth - pos1.size) { pos1.x = currentWidth - pos1.size; pos1.vx *= -1; }
-
     if (pos2.x <= 0) { pos2.x = 0; pos2.vx *= -1; }
     if (pos2.x >= currentWidth - pos2.size) { pos2.x = currentWidth - pos2.size; pos2.vx *= -1; }
-
     let dist = Math.abs(pos1.x - pos2.x);
     if (dist < pos1.size) {
       let temp = pos1.vx;
       pos1.vx = pos2.vx;
       pos2.vx = temp;
-
-      if(pos1.x < pos2.x) {
-        pos1.x -= 1; pos2.x += 1;
-      } else {
-        pos1.x += 1; pos2.x -= 1;
-      }
+      if(pos1.x < pos2.x) { pos1.x -= 1; pos2.x += 1; }
+      else { pos1.x += 1; pos2.x -= 1; }
     }
-
     gsap.set(w1, { x: pos1.x, y: -pos1.y, rotation: pos1.x * 1.5 });
     gsap.set(w2, { x: pos2.x, y: -pos2.y, rotation: pos2.x * -1.5 });
   }
-
   gsap.ticker.add(updateLoop);
 }
 
-// --- LÓGICA DE LA LLUVIA DE EMOJIS DE DINERO ---
+// Lluvia de dinero
 function triggerMoneyRain() {
-  // Crear contenedor temporal en el body
   const rainContainer = document.createElement('div');
   rainContainer.className = 'money-rain-container';
   document.body.appendChild(rainContainer);
-
   const emojis = ['💰', '💵', '💸', '🤑', '🪙'];
-  const count = 45; // Cantidad de billetes/bolsas cayendo
-
+  const count = 45;
   for (let i = 0; i < count; i++) {
     const el = document.createElement('div');
     el.className = 'money-emoji';
     el.textContent = emojis[Math.floor(Math.random() * emojis.length)];
-    
-    // Distribución horizontal aleatoria uniforme
     const randomX = Math.random() * 100; 
     el.style.left = randomX + 'vw';
     el.style.top = '-50px';
-    
     rainContainer.appendChild(el);
-
-    // Velocidades y rotaciones orgánicas aleatorias por cada emoji
     const duration = gsap.utils.random(2.0, 3.8);
     const delay = gsap.utils.random(0, 0.6);
     const rotation = gsap.utils.random(-360, 360);
-    const driftX = gsap.utils.random(-80, 80); // Desvío de lado a lado en la caída
-
-    // Animación física de caída con desvanecimiento simultáneo (Fade out)
-    gsap.to(el, {
-      y: window.innerHeight + 100,
-      x: driftX,
-      rotation: rotation,
-      duration: duration,
-      delay: delay,
-      ease: "power1.in",
-    });
-
-    // Van desapareciendo gradualmente a medida que bajan
-    gsap.to(el, {
-      opacity: 0,
-      duration: duration * 0.4,
-      delay: delay + (duration * 0.6), // Inicia el fade out pasando la mitad del camino
-      ease: "power1.out"
-    });
+    const driftX = gsap.utils.random(-80, 80);
+    gsap.to(el, { y: window.innerHeight + 100, x: driftX, rotation: rotation, duration: duration, delay: delay, ease: "power1.in" });
+    gsap.to(el, { opacity: 0, duration: duration * 0.4, delay: delay + (duration * 0.6), ease: "power1.out" });
   }
-
-  // Auto-destrucción del contenedor del DOM al terminar la lluvia completa
-  setTimeout(() => {
-    rainContainer.remove();
-  }, 4500);
+  setTimeout(() => { rainContainer.remove(); }, 4500);
 }
