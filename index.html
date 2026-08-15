@@ -1,30 +1,33 @@
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>OrderFlow - Customer Interface</title>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/themify-icons@1.0.1/css/themify-icons.css"><link rel="icon" href="favicon.ico" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/themify-icons@1.0.1/css/themify-icons.css" />
+  <link rel="icon" href="favicon.ico" />
   <link rel="stylesheet" href="Customer.css" />
 </head>
 <body>
 <div class="wrap" id="app">
-    <nav class="navbar">
-      <div class="nav-brand">
-        <i class="ti ti-clipboard-list" aria-hidden="true"></i> OrderFlow
-      </div>
-      <div class="nav-links">
-        <button class="nav-link active" onclick="goTo('setup')" id="nl-setup"><span id="emoji-setup">👤</span> Setup</button>
-        <button class="nav-link" onclick="goTo('order')" id="nl-order" disabled><span id="emoji-order">📝</span> New order</button>
-        <button class="nav-link" onclick="goTo('dash')" id="nl-dash" disabled><span id="emoji-dash">📊</span> Dashboard</button>
-      </div>
-      <div class="nav-right">
-        <button class="theme-btn" onclick="toggleTheme()" aria-label="Toggle theme" style="font-size: 1.2rem;">
-          <span id="th-emoji">🌙</span>
-        </button>
-      </div>
-    </nav> 
+  <!-- NAVBAR (sin cambios) -->
+  <nav class="navbar">
+    <div class="nav-brand">
+      <i class="ti ti-clipboard-list" aria-hidden="true"></i> OrderFlow
+    </div>
+    <div class="nav-links">
+      <button class="nav-link active" onclick="goTo('setup')" id="nl-setup"><span id="emoji-setup">👤</span> Setup</button>
+      <button class="nav-link" onclick="goTo('order')" id="nl-order" disabled><span id="emoji-order">📝</span> New order</button>
+      <button class="nav-link" onclick="goTo('dash')" id="nl-dash" disabled><span id="emoji-dash">📊</span> Dashboard</button>
+    </div>
+    <div class="nav-right">
+      <button class="theme-btn" onclick="toggleTheme()" aria-label="Toggle theme" style="font-size: 1.2rem;">
+        <span id="th-emoji">🌙</span>
+      </button>
+    </div>
+  </nav>
 
-  <!-- Setup -->
+  <!-- SETUP PAGE (sin cambios) -->
   <div class="page active" id="pg-setup">
     <div class="contenedor-emojis-fondo">
       <div class="emoji-flotante e-lejos-1">📦</div>
@@ -52,7 +55,7 @@
     </div>
   </div>
 
-  <!-- New Order -->
+  <!-- ORDER PAGE (sin cambios) -->
   <div class="page" id="pg-order">
     <div id="emp-bar" style="display:none;" class="emp-bar"><i class="ti ti-user-check" aria-hidden="true"></i><span id="emp-bar-txt"></span></div>
     <div class="order-layout">
@@ -102,7 +105,6 @@
             </thead>
             <tbody id="ptbody"><tr class="empty-r"><td colspan="6">No products added yet</td></tr></tbody>
           </table>
-          <!-- Descuento -->
           <div class="discount-section">
             <label for="discount-input">Discount code</label>
             <input type="text" id="discount-input" placeholder="SAVE10 / DISCOUNT15">
@@ -120,7 +122,6 @@
               <span>Discount (<span id="discount-label">0%</span>)</span>
               <span id="discount-amount">-$0.00</span>
             </div>
-            <!-- Línea de envío (se muestra solo si > 0) -->
             <div class="tline shipping-line" id="shipping-line" style="display:flex;">
               <span>Shipping</span>
               <span id="shipping-amount">$0.00</span>
@@ -134,7 +135,7 @@
     </div>
   </div>
 
-  <!-- Dashboard -->
+  <!-- DASHBOARD (sin cambios) -->
   <div class="page" id="pg-dash">
     <div class="metrics">
       <div class="mcard"><div class="ml"><i class="ti ti-list-check" aria-hidden="true"></i> Total orders</div><div class="mv" id="m-count">0</div></div>
@@ -147,6 +148,7 @@
   </div>
 </div>
 
+<!-- ALERT OVERLAY (sin cambios) -->
 <div class="alert-overlay" id="custom-alert">
   <div class="alert-modal">
     <div class="alert-icon"><i class="ti ti-alert-circle"></i></div>
@@ -156,9 +158,30 @@
   </div>
 </div>
 
-  
+<!-- TOAST (sin cambios) -->
 <div class="toast" id="toast"></div>
+
+<!-- CHATBOT CON PUTER.JS -->
+<div id="chat-container">
+  <button id="chat-toggle" aria-label="Open chat">💬</button>
+  <div id="chat-panel">
+    <div class="chat-header">
+      <span>🤖 AI Assistant</span>
+      <button id="chat-close">✕</button>
+    </div>
+    <div class="chat-messages" id="chat-messages">
+      <div class="bot-msg">👋 Hi! I'm your AI assistant. Ask me anything – translations, definitions, general questions, or help with OrderFlow!</div>
+    </div>
+    <div class="chat-input-area">
+      <input type="text" id="chat-input" placeholder="Type your question..." autofocus>
+      <button id="chat-send">➤</button>
+    </div>
+  </div>
+</div>
+
+<!-- SCRIPTS -->
 <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
+<script src="https://js.puter.com/v2/"></script>   <!-- <-- PUTER.JS AÑADIDO -->
 <script src="Customer.js"></script>
 </body>
 </html>

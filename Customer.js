@@ -1,3 +1,6 @@
+// ============================================================
+// GLOBAL VARIABLES
+// ============================================================
 let isDark = true,
   products = [],
   pid = 0,
@@ -13,6 +16,9 @@ const DISCOUNT_CODES = {
   'DISCOUNT15': 0.15
 };
 
+// ============================================================
+// ALERT / TOAST / THEME / SETUP
+// ============================================================
 function showAlert(title, message) {
   document.getElementById('alert-title').textContent = title;
   document.getElementById('alert-msg').textContent = message;
@@ -77,6 +83,9 @@ function saveSetup() {
   setTimeout(() => goTo('order'), 700);
 }
 
+// ============================================================
+// PRODUCT TABLE & ORDER LOGIC
+// ============================================================
 function addProduct() {
   const name = document.getElementById('np').value.trim();
   const qty = parseInt(document.getElementById('nq').value) || 1;
@@ -142,7 +151,6 @@ function updateTotals() {
   document.getElementById('t-tax').textContent = '$' + tax.toFixed(2);
   document.getElementById('t-gross').textContent = '$' + gross.toFixed(2);
 
-  // Línea de descuento
   const discountLine = document.getElementById('discount-line');
   const discountLabel = document.getElementById('discount-label');
   const discountAmountSpan = document.getElementById('discount-amount');
@@ -154,7 +162,6 @@ function updateTotals() {
     discountLine.style.display = 'none';
   }
 
-  // Línea de envío SIEMPRE visible
   const shippingLine = document.getElementById('shipping-line');
   const shippingAmountSpan = document.getElementById('shipping-amount');
   shippingLine.style.display = 'flex';
@@ -266,7 +273,6 @@ function generateOrder() {
   ['c-name', 'c-email', 'c-phone', 'c-addr', 'cash-amount', 'card-number'].forEach(x => document.getElementById(x).value = '');
   document.getElementById('payment-method').value = 'cash';
   togglePaymentFields();
-  // Resetear descuento y envío
   removeDiscount();
   document.getElementById('shipping-cost').value = 0;
   renderTable();
@@ -293,6 +299,9 @@ function deleteOrder(oid) {
   renderDash();
 }
 
+// ============================================================
+// DASHBOARD
+// ============================================================
 function renderDash() {
   const rev = orders.reduce((s, o) => s + o.net, 0);
   const tot = orders.reduce((s, o) => s + o.gross, 0);
@@ -301,7 +310,6 @@ function renderDash() {
   const revEl = document.getElementById('m-rev');
   const totalEl = document.getElementById('m-total');
   
-  // 1. NUEVA ANIMACIÓN DE CONTEO CON GSAP
   gsap.to(countEl, { 
     innerHTML: orders.length, 
     duration: 1.2, 
@@ -327,7 +335,6 @@ function renderDash() {
 
   const g = document.getElementById('orders-grid');
 
-  // 2. TU VIEJO OESTE INTACTO
   if (!orders.length) {
     g.innerHTML = `
       <div class="no-orders">
@@ -346,7 +353,6 @@ function renderDash() {
     return;
   }
 
-  // 3. EL RENDERIZADO NORMAL DE LAS TARJETAS
   g.innerHTML = orders.slice().reverse().map(o => {
     const discountInfo = (o.discountCode && o.discountPercent > 0) ?
       'Discount: ' + o.discountCode + ' (' + (o.discountPercent * 100).toFixed(0) + '%) -$' + o.discountAmount.toFixed(2) :
@@ -393,14 +399,14 @@ function exportPDF(oid) {
 
   const discountRow = (o.discountCode && o.discountPercent > 0) ? `
     <tr>
-      <td colspan="3" style="text-align:right;font-weight:500;color:#e05580;">Descuento (${o.discountCode} - ${(o.discountPercent * 100).toFixed(0)}%)</td>
+      <td colspan="3" style="text-align:right;font-weight:500;color:#e05580;">Discount (${o.discountCode} - ${(o.discountPercent * 100).toFixed(0)}%)</td>
       <td style="text-align:right;font-weight:600;color:#e05580;">-$${o.discountAmount.toFixed(2)}</td>
     </tr>
   ` : '';
 
   const shippingRow = (o.shippingCost > 0) ? `
     <tr>
-      <td colspan="3" style="text-align:right;font-weight:500;color:#1a6fd4;">Costo de envío</td>
+      <td colspan="3" style="text-align:right;font-weight:500;color:#1a6fd4;">Shipping cost</td>
       <td style="text-align:right;font-weight:600;color:#1a6fd4;">$${o.shippingCost.toFixed(2)}</td>
     </tr>
   ` : '';
@@ -409,7 +415,7 @@ function exportPDF(oid) {
   <html>
   <head>
     <meta charset="utf-8">
-    <title>Comprobante ${o.id}</title>
+    <title>Invoice ${o.id}</title>
     <style>
       @page { size: A4; margin: 0; }
       *, *::before, *::after { box-sizing: border-box; }
@@ -449,10 +455,10 @@ function exportPDF(oid) {
         <tr>
           <td>
             <div class="brand-title">OrderFlow</div>
-            <div class="brand-subtitle">Empresa: <strong>${esc(o.company)}</strong> &middot; Agente: <strong>${esc(o.employee)}</strong></div>
+            <div class="brand-subtitle">Company: <strong>${esc(o.company)}</strong> &middot; Agent: <strong>${esc(o.employee)}</strong></div>
           </td>
           <td style="vertical-align:top;">
-            <div class="invoice-title">COMPROBANTE DE COMPRA</div>
+            <div class="invoice-title">PURCHASE INVOICE</div>
             <div class="invoice-id">${o.id}</div>
           </td>
         </tr>
@@ -462,22 +468,22 @@ function exportPDF(oid) {
         <tr>
           <td class="info-cell">
             <div class="info-box">
-              <h2 class="sec-title">Detalles del Pedido</h2>
-              <div class="info-row"><span class="info-lbl">Fecha:</span><span class="info-val">${o.date}</span></div>
-              <div class="info-row"><span class="info-lbl">Estado:</span><span class="info-val" style="color:#166534;text-transform:capitalize;">${o.status}</span></div>
-              <div class="info-row"><span class="info-lbl">Método Pago:</span><span class="info-val">${o.payment.method === 'cash' ? 'Efectivo' : 'Tarjeta'}</span></div>
-              <div class="info-row"><span class="info-lbl">Referencia:</span><span class="info-val">${o.payment.method === 'cash' ? '$' + o.payment.cashAmount.toFixed(2) : '•••• ' + String(o.payment.cardNumber).slice(-4)}</span></div>
-              ${o.discountCode ? `<div class="info-row"><span class="info-lbl">Descuento:</span><span class="info-val" style="color:#e05580;">${o.discountCode} (${(o.discountPercent * 100).toFixed(0)}%) -$${o.discountAmount.toFixed(2)}</span></div>` : ''}
-              ${o.shippingCost > 0 ? `<div class="info-row"><span class="info-lbl">Envío:</span><span class="info-val" style="color:#1a6fd4;">$${o.shippingCost.toFixed(2)}</span></div>` : ''}
+              <h2 class="sec-title">Order Details</h2>
+              <div class="info-row"><span class="info-lbl">Date:</span><span class="info-val">${o.date}</span></div>
+              <div class="info-row"><span class="info-lbl">Status:</span><span class="info-val" style="color:#166534;text-transform:capitalize;">${o.status}</span></div>
+              <div class="info-row"><span class="info-lbl">Payment:</span><span class="info-val">${o.payment.method === 'cash' ? 'Cash' : 'Card'}</span></div>
+              <div class="info-row"><span class="info-lbl">Reference:</span><span class="info-val">${o.payment.method === 'cash' ? '$' + o.payment.cashAmount.toFixed(2) : '•••• ' + String(o.payment.cardNumber).slice(-4)}</span></div>
+              ${o.discountCode ? `<div class="info-row"><span class="info-lbl">Discount:</span><span class="info-val" style="color:#e05580;">${o.discountCode} (${(o.discountPercent * 100).toFixed(0)}%) -$${o.discountAmount.toFixed(2)}</span></div>` : ''}
+              ${o.shippingCost > 0 ? `<div class="info-row"><span class="info-lbl">Shipping:</span><span class="info-val" style="color:#1a6fd4;">$${o.shippingCost.toFixed(2)}</span></div>` : ''}
             </div>
           </td>
           <td class="info-cell">
             <div class="info-box right">
-              <h2 class="sec-title">Información del Cliente</h2>
-              <div class="info-row"><span class="info-lbl">Nombre:</span><span class="info-val">${esc(o.customer.name)}</span></div>
-              <div class="info-row"><span class="info-lbl">Teléfono:</span><span class="info-val">${esc(o.customer.phone)}</span></div>
+              <h2 class="sec-title">Customer Information</h2>
+              <div class="info-row"><span class="info-lbl">Name:</span><span class="info-val">${esc(o.customer.name)}</span></div>
+              <div class="info-row"><span class="info-lbl">Phone:</span><span class="info-val">${esc(o.customer.phone)}</span></div>
               <div class="info-row"><span class="info-lbl">Email:</span><span class="info-val" style="font-weight:500;">${esc(o.customer.email)}</span></div>
-              <div class="info-row"><span class="info-lbl">Dirección:</span><span class="info-val">${esc(o.customer.addr)}</span></div>
+              <div class="info-row"><span class="info-lbl">Address:</span><span class="info-val">${esc(o.customer.addr)}</span></div>
             </div>
           </td>
         </tr>
@@ -486,9 +492,9 @@ function exportPDF(oid) {
       <table class="items-table">
         <thead>
           <tr>
-            <th style="width:40%;">Descripción</th>
-            <th style="width:15%;text-align:center;">Cant.</th>
-            <th style="width:20%;text-align:right;">Precio Unit.</th>
+            <th style="width:40%;">Description</th>
+            <th style="width:15%;text-align:center;">Qty</th>
+            <th style="width:20%;text-align:right;">Unit Price</th>
             <th style="width:25%;text-align:right;">Subtotal</th>
           </tr>
         </thead>
@@ -498,16 +504,15 @@ function exportPDF(oid) {
       </table>
 
       <table class="summary-table">
-        <tr><td class="lbl">Subtotal neto</td><td class="val">$${o.net.toFixed(2)}</td></tr>
+        <tr><td class="lbl">Net subtotal</td><td class="val">$${o.net.toFixed(2)}</td></tr>
         ${discountRow}
         ${shippingRow}
-        <tr><td class="lbl">IVA / Impuestos (13%)</td><td class="val">$${o.tax.toFixed(2)}</td></tr>
-        <tr><td class="lbl">Shipping</td><td class="val">$${o.shippingCost.toFixed(2)}</td></tr>
-        <tr class="total-row"><td class="lbl">Total a Pagar</td><td class="val">$${o.gross.toFixed(2)}</td></tr>
+        <tr><td class="lbl">Tax (13%)</td><td class="val">$${o.tax.toFixed(2)}</td></tr>
+        <tr class="total-row"><td class="lbl">Total to pay</td><td class="val">$${o.gross.toFixed(2)}</td></tr>
       </table>
 
       <div class="footer">
-        Documento electrónico emitido por OrderFlow &middot; ¡Gracias por su confianza y preferencia!
+        Electronic document issued by OrderFlow &middot; Thank you for your trust!
       </div>
     </div>
   </body>
@@ -523,39 +528,9 @@ function exportPDF(oid) {
   }
 }
 
-function showToast(msg) {
-  const t = document.getElementById('toast');
-  t.textContent = msg;
-  t.classList.add('show');
-  setTimeout(() => t.classList.remove('show'), 3000);
-}
-
-function esc(s) { return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
-
-togglePaymentFields();
-
-// GSAP Animations
-window.addEventListener('DOMContentLoaded', () => {
-  gsap.from(".setup-hero", { duration: 1, y: 30, opacity: 0, ease: "power3.out" });
-  gsap.from(".pg-setup .card", { duration: 1, y: 50, opacity: 0, delay: 0.2, ease: "power3.out" });
-});
-
-function goTo(p) {
-  if ((p === 'order' || p === 'dash') && !setupComplete) {
-    showAlert('Navigation Restricted', 'Please complete the profile Setup first before exploring other sections.');
-    return;
-  }
-  ['setup', 'order', 'dash'].forEach(x => {
-    document.getElementById('pg-' + x).classList.remove('active');
-    document.getElementById('nl-' + x).classList.remove('active');
-  });
-  const nextPage = document.getElementById('pg-' + p);
-  nextPage.classList.add('active');
-  document.getElementById('nl-' + p).classList.add('active');
-  gsap.fromTo(nextPage, { opacity: 0, x: 20 }, { duration: 0.4, opacity: 1, x: 0, ease: "power2.out" });
-  if (p === 'dash') renderDash();
-}
-
+// ============================================================
+// UTILITY FUNCTIONS
+// ============================================================
 function showToast(msg) {
   const t = document.getElementById('toast');
   t.textContent = msg;
@@ -565,47 +540,7 @@ function showToast(msg) {
   gsap.to(t, { delay: 2.5, duration: 0.3, opacity: 0, y: 20, scale: 0.95, onComplete: () => t.classList.remove('show') });
 }
 
-function showAlert(title, message) {
-  document.getElementById('alert-title').textContent = title;
-  document.getElementById('alert-msg').textContent = message;
-  const overlay = document.getElementById('custom-alert');
-  const modal = overlay.querySelector('.alert-modal');
-  overlay.classList.add('show');
-  gsap.fromTo(overlay, { opacity: 0 }, { duration: 0.2, opacity: 1 });
-  gsap.fromTo(modal, { scale: 0.7, opacity: 0 }, { duration: 0.4, scale: 1, opacity: 1, ease: "back.out(1.5)" });
-}
-
-function closeAlert() {
-  const overlay = document.getElementById('custom-alert');
-  const modal = overlay.querySelector('.alert-modal');
-  gsap.to(modal, { duration: 0.2, scale: 0.8, opacity: 0 });
-  gsap.to(overlay, { duration: 0.2, opacity: 0, onComplete: () => overlay.classList.remove('show') });
-}
-
-function togglePaymentFields() {
-  const method = document.getElementById('payment-method').value;
-  const cashField = document.getElementById('cash-amount-field');
-  const cardField = document.getElementById('card-number-field');
-  if (method === 'cash') {
-    cardField.style.display = 'none';
-    cashField.style.display = 'flex';
-    gsap.fromTo(cashField, { opacity: 0, y: -10 }, { duration: 0.3, opacity: 1, y: 0 });
-  } else {
-    cashField.style.display = 'none';
-    cardField.style.display = 'flex';
-    gsap.fromTo(cardField, { opacity: 0, y: -10 }, { duration: 0.3, opacity: 1, y: 0 });
-  }
-}
-
-// Animaciones constantes
-window.addEventListener('DOMContentLoaded', () => {
-  if (document.querySelector('.setup-icon i')) {
-    gsap.to(".setup-icon i", { y: -6, duration: 1.8, repeat: -1, yoyo: true, ease: "power1.inOut" });
-  }
-  gsap.to(".nav-brand i", { scale: 1.1, duration: 2, repeat: -1, yoyo: true, ease: "power1.inOut" });
-  gsap.to(".primary-btn", { boxShadow: "0 6px 20px rgba(26,111,212,0.4)", duration: 1.5, repeat: -1, yoyo: true, ease: "sine.inOut" });
-  gsap.from(".navbar", { y: -20, opacity: 0, duration: 0.8, ease: "power2.out" });
-});
+function esc(s) { return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
 
 function goTo(p) {
   if ((p === 'order' || p === 'dash') && !setupComplete) {
@@ -631,7 +566,6 @@ function goTo(p) {
   if (p === 'dash') renderDash();
 }
 
-// Tumbleweeds
 function initTumbleweeds() {
   const stage = document.getElementById('west-stage');
   const w1 = document.getElementById('weed1');
@@ -672,7 +606,6 @@ function initTumbleweeds() {
   gsap.ticker.add(updateLoop);
 }
 
-// Lluvia de dinero
 function triggerMoneyRain() {
   const rainContainer = document.createElement('div');
   rainContainer.className = 'money-rain-container';
@@ -696,3 +629,150 @@ function triggerMoneyRain() {
   }
   setTimeout(() => { rainContainer.remove(); }, 4500);
 }
+
+// ============================================================
+// INITIAL ANIMATIONS
+// ============================================================
+window.addEventListener('DOMContentLoaded', () => {
+  gsap.from(".setup-hero", { duration: 1, y: 30, opacity: 0, ease: "power3.out" });
+  gsap.from(".pg-setup .card", { duration: 1, y: 50, opacity: 0, delay: 0.2, ease: "power3.out" });
+  gsap.to(".setup-icon i", { y: -6, duration: 1.8, repeat: -1, yoyo: true, ease: "power1.inOut" });
+  gsap.to(".nav-brand i", { scale: 1.1, duration: 2, repeat: -1, yoyo: true, ease: "power1.inOut" });
+  gsap.to(".primary-btn", { boxShadow: "0 6px 20px rgba(26,111,212,0.4)", duration: 1.5, repeat: -1, yoyo: true, ease: "sine.inOut" });
+  gsap.from(".navbar", { y: -20, opacity: 0, duration: 0.8, ease: "power2.out" });
+});
+
+togglePaymentFields();
+// ============================================================
+// 🆕 CHATBOT CON PUTER.JS (VERSIÓN ESTABLE)
+// ============================================================
+document.addEventListener('DOMContentLoaded', function() {
+  // Esperar a que Puter.js esté listo
+  if (typeof puter === 'undefined') {
+    console.error('Puter.js no está cargado. Revisa la conexión o el script.');
+    return;
+  }
+
+  const chatToggle = document.getElementById('chat-toggle');
+  const chatPanel = document.getElementById('chat-panel');
+  const chatClose = document.getElementById('chat-close');
+  const chatInput = document.getElementById('chat-input');
+  const chatSend = document.getElementById('chat-send');
+  const messagesContainer = document.getElementById('chat-messages');
+
+  // Verificar que todos los elementos existen
+  if (!chatToggle || !chatPanel || !chatClose || !chatInput || !chatSend || !messagesContainer) {
+    console.error('Faltan elementos del chatbot. Revisa los IDs.');
+    return;
+  }
+
+  // Toggle chat con GSAP
+  function toggleChat() {
+    const isOpen = chatPanel.classList.contains('open');
+    if (isOpen) {
+      gsap.to(chatPanel, {
+        scale: 0.8,
+        y: 30,
+        opacity: 0,
+        duration: 0.25,
+        ease: "power2.in",
+        onComplete: () => {
+          chatPanel.classList.remove('open');
+          chatPanel.style.display = 'none';
+        }
+      });
+      gsap.to(chatToggle, { scale: 1, duration: 0.2 });
+    } else {
+      chatPanel.style.display = 'flex';
+      gsap.fromTo(chatPanel,
+        { scale: 0.7, y: 40, opacity: 0 },
+        { scale: 1, y: 0, opacity: 1, duration: 0.4, ease: "back.out(1.7)" }
+      );
+      chatPanel.classList.add('open');
+      gsap.to(chatToggle, { scale: 1.1, duration: 0.2, yoyo: true, repeat: 1 });
+      setTimeout(() => chatInput.focus(), 300);
+    }
+  }
+
+  chatToggle.addEventListener('click', toggleChat);
+  chatClose.addEventListener('click', toggleChat);
+
+  // Enviar mensaje
+  function sendMessage() {
+    const text = chatInput.value.trim();
+    if (!text) {
+      console.log('Mensaje vacío');
+      return;
+    }
+    addMessage(text, 'user');
+    chatInput.value = '';
+    handleBotResponse(text);
+  }
+
+  chatSend.addEventListener('click', sendMessage);
+  chatInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') sendMessage();
+  });
+
+  function addMessage(text, sender) {
+    const div = document.createElement('div');
+    div.className = sender === 'bot' ? 'bot-msg' : 'user-msg';
+    div.textContent = text;
+    messagesContainer.appendChild(div);
+    messagesContainer.scrollTop = messagesContainer.scrollHeight;
+    gsap.from(div, { duration: 0.3, ease: "power2.out" });
+  }
+
+  // Respuesta con Puter.js
+  async function handleBotResponse(userText) {
+    // Mostrar indicador de "pensando"
+    const typingDiv = document.createElement('div');
+    typingDiv.className = 'bot-msg';
+    typingDiv.textContent = '✍️ Thinking...';
+    messagesContainer.appendChild(typingDiv);
+    messagesContainer.scrollTop = messagesContainer.scrollHeight;
+
+    try {
+      // Llamar a Puter.js con manejo de errores
+      const response = await puter.ai.chat(userText, { model: 'gpt-4o-mini' });
+      // Eliminar el indicador
+      typingDiv.remove();
+      const answer = response.message?.content || 'Sorry, I could not process your request.';
+      await typeMessage(answer, 'bot');
+    } catch (error) {
+      console.error('Error en Puter.js:', error);
+      typingDiv.remove();
+      await typeMessage('⚠️ Error connecting to AI. Please try again later.', 'bot');
+    }
+  }
+
+  // Efecto de escritura (streaming)
+  function typeMessage(text, sender) {
+    return new Promise((resolve) => {
+      const div = document.createElement('div');
+      div.className = sender === 'bot' ? 'bot-msg' : 'user-msg';
+      div.textContent = '';
+      messagesContainer.appendChild(div);
+      messagesContainer.scrollTop = messagesContainer.scrollHeight;
+
+      let index = 0;
+      const chars = text.split('');
+      const total = chars.length;
+      const speed = 15; // ms por carácter
+
+      function addNextChar() {
+        if (index < total) {
+          div.textContent += chars[index];
+          index++;
+          messagesContainer.scrollTop = messagesContainer.scrollHeight;
+          gsap.delayedCall(speed / 1000, addNextChar);
+        } else {
+          resolve();
+        }
+      }
+      addNextChar();
+    });
+  }
+
+  console.log('Chatbot inicializado correctamente.');
+});
