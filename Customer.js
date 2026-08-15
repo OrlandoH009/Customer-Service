@@ -724,7 +724,7 @@ document.addEventListener('DOMContentLoaded', function() {
     messagesContainer.scrollTop = messagesContainer.scrollHeight;
 
     // 🔑 AQUÍ PONDRÁS TU LLAVE DE GROQ (Empieza con gsk_...)
-    const apiKey = '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'; // Reemplaza con tu propia clave de Groq
+    const apiKey = process.env.GROQ_API_KEY; // Reemplaza con tu propia clave de Groq
     const endpoint = 'https://api.groq.com/openai/v1/chat/completions';
 
     try {
