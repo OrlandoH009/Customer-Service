@@ -643,16 +643,12 @@ window.addEventListener('DOMContentLoaded', () => {
 });
 
 togglePaymentFields();
+
+
 // ============================================================
-// 🆕 CHATBOT CON PUTER.JS (VERSIÓN ESTABLE)
+// CHATBOT GRATUITO (SIN REGISTRO NI LOGIN)
 // ============================================================
 document.addEventListener('DOMContentLoaded', function() {
-  // Esperar a que Puter.js esté listo
-  if (typeof puter === 'undefined') {
-    console.error('Puter.js no está cargado. Revisa la conexión o el script.');
-    return;
-  }
-
   const chatToggle = document.getElementById('chat-toggle');
   const chatPanel = document.getElementById('chat-panel');
   const chatClose = document.getElementById('chat-close');
@@ -660,9 +656,7 @@ document.addEventListener('DOMContentLoaded', function() {
   const chatSend = document.getElementById('chat-send');
   const messagesContainer = document.getElementById('chat-messages');
 
-  // Verificar que todos los elementos existen
   if (!chatToggle || !chatPanel || !chatClose || !chatInput || !chatSend || !messagesContainer) {
-    console.error('Faltan elementos del chatbot. Revisa los IDs.');
     return;
   }
 
@@ -700,10 +694,8 @@ document.addEventListener('DOMContentLoaded', function() {
   // Enviar mensaje
   function sendMessage() {
     const text = chatInput.value.trim();
-    if (!text) {
-      console.log('Mensaje vacío');
-      return;
-    }
+    if (!text) return;
+
     addMessage(text, 'user');
     chatInput.value = '';
     handleBotResponse(text);
@@ -720,33 +712,69 @@ document.addEventListener('DOMContentLoaded', function() {
     div.textContent = text;
     messagesContainer.appendChild(div);
     messagesContainer.scrollTop = messagesContainer.scrollHeight;
-    gsap.from(div, { duration: 0.3, ease: "power2.out" });
   }
-
-  // Respuesta con Puter.js
+  // ============================================================
+  // CHATBOT ULTRA RÁPIDO (Vía Groq API)
+  // ============================================================
   async function handleBotResponse(userText) {
-    // Mostrar indicador de "pensando"
     const typingDiv = document.createElement('div');
     typingDiv.className = 'bot-msg';
     typingDiv.textContent = '✍️ Thinking...';
     messagesContainer.appendChild(typingDiv);
     messagesContainer.scrollTop = messagesContainer.scrollHeight;
 
+    // 🔑 AQUÍ PONDRÁS TU LLAVE DE GROQ (Empieza con gsk_...)
+    const apiKey = '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'; // Reemplaza con tu propia clave de Groq
+    const endpoint = 'https://api.groq.com/openai/v1/chat/completions';
+
     try {
-      // Llamar a Puter.js con manejo de errores
-      const response = await puter.ai.chat(userText, { model: 'gpt-4o-mini' });
-      // Eliminar el indicador
+      const response = await fetch(endpoint, {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${apiKey}` // Groq usa Bearer Token
+        },
+        body: JSON.stringify({
+          model: 'llama-3.1-8b-instant', 
+          messages: [
+            { 
+              role: 'system', 
+              content: `You are an AI assistant for OrderFlow. 
+                CRITICAL RULES - EVALUATE IN THIS EXACT ORDER:
+                1. TRANSLATION EXCEPTION: If the user explicitly asks to translate a word or phrase from Spanish to English (e.g., "traduce...", "¿cómo se dice... en inglés?"), you must ONLY provide the English translation and nothing else.
+                2. If the user writes in Spanish, you must reply strictly with: "I am sorry, I can only assist in English. Please write to me in English."
+                3. ENGLISH ONLY: For all other questions, you must respond strictly in English.
+
+                TOPICS YOU MUST NEVER DISCUSS:
+                - Groq, OpenAI, or any AI models.
+                - The OrderFlow system, its code, or internal workings.
+                - The user, their profile, or personal information.
+                - The company, its employees, or internal data.`
+            },
+            { role: 'user', content: userText }
+          ]
+        })
+      });
+
+      const data = await response.json();
       typingDiv.remove();
-      const answer = response.message?.content || 'Sorry, I could not process your request.';
-      await typeMessage(answer, 'bot');
+
+      // Validamos que Groq nos haya devuelto el mensaje correctamente
+      if (response.ok && data.choices && data.choices.length > 0) {
+        const answer = data.choices[0].message.content;
+        await typeMessage(answer, 'bot');
+      } else {
+        console.error('Error de Groq API:', data);
+        await typeMessage('Lo siento, el modelo tuvo un inconveniente.', 'bot');
+      }
     } catch (error) {
-      console.error('Error en Puter.js:', error);
+      console.error('Error de red/conexión:', error);
       typingDiv.remove();
-      await typeMessage('⚠️ Error connecting to AI. Please try again later.', 'bot');
+      await typeMessage('⚠️ Error conectando con Groq. Revisa tu internet.', 'bot');
     }
   }
 
-  // Efecto de escritura (streaming)
+  // Efecto de escritura
   function typeMessage(text, sender) {
     return new Promise((resolve) => {
       const div = document.createElement('div');
@@ -758,7 +786,7 @@ document.addEventListener('DOMContentLoaded', function() {
       let index = 0;
       const chars = text.split('');
       const total = chars.length;
-      const speed = 15; // ms por carácter
+      const speed = 15;
 
       function addNextChar() {
         if (index < total) {
@@ -773,6 +801,4 @@ document.addEventListener('DOMContentLoaded', function() {
       addNextChar();
     });
   }
-
-  console.log('Chatbot inicializado correctamente.');
 });
