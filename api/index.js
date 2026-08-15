@@ -62,6 +62,4 @@ TOPICS YOU MUST NEVER DISCUSS:
   }
 });
 
-app.listen(PORT, () => {
-  console.log(`🚀 Servidor ejecutándose en http://localhost:${PORT}`);
-});
+module.exports = app;
