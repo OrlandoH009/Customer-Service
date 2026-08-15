@@ -685,7 +685,7 @@ window.addEventListener('DOMContentLoaded', () => {
 togglePaymentFields();
 
 // ============================================================
-// CHATBOT GRATUITO
+// CHATBOT GRATUITO (Con Memoria de Conversación)
 // ============================================================
 document.addEventListener('DOMContentLoaded', function() {
   const chatToggle = document.getElementById('chat-toggle');
@@ -698,6 +698,9 @@ document.addEventListener('DOMContentLoaded', function() {
   if (!chatToggle || !chatPanel || !chatClose || !chatInput || !chatSend || !messagesContainer) {
     return;
   }
+
+  // Historial de conversación activo
+  let conversationHistory = [];
 
   // Toggle chat con GSAP
   function toggleChat() {
@@ -737,7 +740,11 @@ document.addEventListener('DOMContentLoaded', function() {
 
     addMessage(text, 'user');
     chatInput.value = '';
-    handleBotResponse(text);
+
+    // Guardar mensaje del usuario en el historial
+    conversationHistory.push({ role: 'user', content: text });
+
+    handleBotResponse();
   }
 
   chatSend.addEventListener('click', sendMessage);
@@ -754,9 +761,9 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 
   // ============================================================
-  // CHATBOT ULTRA RÁPIDO (Vía Backend Server)
+  // CHATBOT ULTRA RÁPIDO (Vía Backend Server con Memoria)
   // ============================================================
-  async function handleBotResponse(userText) {
+  async function handleBotResponse() {
     const typingDiv = document.createElement('div');
     typingDiv.className = 'bot-msg';
     typingDiv.textContent = '✍️ Thinking...';
@@ -769,13 +776,15 @@ document.addEventListener('DOMContentLoaded', function() {
         headers: { 
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ userText })
+        body: JSON.stringify({ conversationHistory })
       });
 
       const data = await response.json();
       typingDiv.remove();
 
       if (response.ok && data.answer) {
+        // Guardar respuesta de la IA en el historial
+        conversationHistory.push({ role: 'assistant', content: data.answer });
         await typeMessage(data.answer, 'bot');
       } else {
         console.error('Error del servidor:', data);
@@ -784,7 +793,7 @@ document.addEventListener('DOMContentLoaded', function() {
     } catch (error) {
       console.error('Error de red/conexión:', error);
       typingDiv.remove();
-      await typeMessage('⚠️ Error conectando con el servidor. Asegúrate de ejecutar server.js.', 'bot');
+      await typeMessage('⚠️ Error conectando con el servidor.', 'bot');
     }
   }
 

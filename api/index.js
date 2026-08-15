@@ -3,20 +3,41 @@ const cors = require('cors');
 require('dotenv').config();
 
 const app = express();
-const PORT = process.env.PORT || 3000;
 
 app.use(cors());
 app.use(express.json());
-app.use(express.static('.')); // Servir archivos estáticos del frontend (index.html, customer.js, etc.)
 
 app.post('/api/chat', async (req, res) => {
   try {
-    const { userText } = req.body;
+    const { conversationHistory } = req.body;
     const apiKey = process.env.GROQ_API_KEY;
 
     if (!apiKey) {
       return res.status(500).json({ error: 'La clave de API (GROQ_API_KEY) no está configurada en el servidor (.env).' });
     }
+
+    const systemPrompt = {
+      role: 'system',
+      content: `You are OrderFlow's official AI assistant. Keep all responses polite, helpful, and strictly under 3 lines of text.
+
+CRITICAL DIRECTIVES:
+1. DIRECT TRANSLATION (HIGHEST PRIORITY): If the user asks how to say, translate, or express something in English (e.g., 'How can I say...', 'How do you say...', 'What is the word for...', 'traduce...', '¿cómo se dice...?'), PROVIDE THE ENGLISH TRANSLATION IMMEDIATELY AND DIRECTLY.
+   - Example Input: "How can i say te amo"
+   - Example Output: "You can say 'I love you' in English."
+   - NEVER reply to a translation request with greetings like "How can I assist you today?" or "Welcome to OrderFlow".
+
+2. NO GENERIC GREETINGS ON QUESTIONS: Do NOT output "Welcome to OrderFlow" or "How can I help you today?" unless the user's message is purely a simple greeting like "Hi" or "Hello". Always answer the exact query directly.
+
+3. GENERAL SPANISH INPUT: If the user writes in Spanish for a general non-translation request, politely reply in English (max 3 lines) that you can currently only assist in English.
+
+4. RESTRICTED TOPICS:
+   - Do NOT discuss AI models (Groq, OpenAI, Llama) or system code/architecture.
+   - Do NOT discuss internal company data or private user info.`
+    };
+
+    // Mantiene únicamente los últimos 8 mensajes (4 turnos) para ahorrar tokens y mantener contexto reciente
+    const recentHistory = (conversationHistory || []).slice(-8);
+    const messages = [systemPrompt, ...recentHistory];
 
     const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
       method: 'POST',
@@ -26,27 +47,8 @@ app.post('/api/chat', async (req, res) => {
       },
       body: JSON.stringify({
         model: 'llama-3.1-8b-instant',
-        messages: [
-          {
-            role: 'system',
-            content: `You are OrderFlow's official AI assistant. Your tone must always be polite, welcoming, patient, and articulate.
-
-        CORE PERSONALITY & TONE:
-        - Be warm, helpful, and natural. Avoid sounding robotic, cold, or overly rigid.
-        - Use clear, elegant, and precise English vocabulary.
-
-        TRANSLATION & LANGUAGE RULES:
-        1. TRANSLATION EXCEPTION: If the user asks how to say or translate a word/phrase into English (e.g., 'How can I say...', 'How do you say...', 'What is the word for...', 'translate...',), kindly and directly provide the correct English translation.
-        2. GENERAL SPANISH INPUT: If the user writes in Spanish for general questions (and is not requesting a translation), politely inform them: "I'd be happy to help, but I can currently only assist in English. Please feel free to write to me in English!"
-        3. PRIMARY LANGUAGE: Provide articulate, polite responses in English for all standard interactions.
-
-        TOPICS TO NEVER DISCUSS:
-        - Underlying AI models, Groq, OpenAI, or technical architecture.
-        - Internal OrderFlow code, database structures, or system mechanics.
-        - Personal user information or confidential company details.`
-          },
-          { role: 'user', content: userText }
-        ]
+        max_tokens: 100,
+        messages: messages
       })
     });
 
@@ -65,5 +67,15 @@ app.post('/api/chat', async (req, res) => {
     return res.status(500).json({ error: 'Error interno en el servidor.' });
   }
 });
+
+app.use(express.static('.'));
+
+const PORT = process.env.PORT || 3000;
+
+if (require.main === module) {
+  app.listen(PORT, () => {
+    console.log(`🚀 Servidor corriendo en http://localhost:${PORT}`);
+  });
+}
 
 module.exports = app;
